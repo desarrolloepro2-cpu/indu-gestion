@@ -22,8 +22,10 @@ import {
   ClipboardList,
   ListTodo,
   FileText,
-  Palmtree
+  Palmtree,
+  Globe
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import EmployeeList from './EmployeeList';
 import EmployeeForm from './EmployeeForm';
 import CostCenterList from './CostCenterList';
@@ -58,6 +60,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
+  const { language, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar'>(() => (localStorage.getItem('dashboardTab') as any) || 'summary');
 
   useEffect(() => {
@@ -307,37 +310,37 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
 
         <nav style={{ flex: 1, overflowY: 'auto' }} className="custom-scrollbar">
           <div style={{ padding: '0 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Operaciones Centrales
+            {t('operaciones_centrales')}
           </div>
-          <SidebarItem id="summary" icon={LayoutDashboard} label="Panel General" />
-          {hasPermission('empleados') && <SidebarItem id="employees" icon={Users} label="Gestión de Talento" />}
-          {hasPermission('cargos') && <SidebarItem id="jobs" icon={Briefcase} label="Catálogo de Cargos" />}
-          {hasPermission('costos') && <SidebarItem id="costs" icon={DollarSign} label="Centros de Costo" />}
-          {hasPermission('grupos') && <SidebarItem id="groups" icon={Layers} label="Grupos de Trabajo" />}
+          <SidebarItem id="summary" icon={LayoutDashboard} label={t('panel_general')} />
+          {hasPermission('empleados') && <SidebarItem id="employees" icon={Users} label={t('gestion_talento')} />}
+          {hasPermission('cargos') && <SidebarItem id="jobs" icon={Briefcase} label={t('cargos')} />}
+          {hasPermission('costos') && <SidebarItem id="costs" icon={DollarSign} label={t('centros_costo')} />}
+          {hasPermission('grupos') && <SidebarItem id="groups" icon={Layers} label={t('grupos_trabajo')} />}
           
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Seguimiento Operativo
+            {t('seguimiento_operativo')}
           </div>
-          {hasPermission('programacion') && <SidebarItem id="schedule" icon={Calendar} label="Programación Diaria" />}
-          {hasPermission('turnos') && <SidebarItem id="shifts" icon={Clock} label="Jornadas Laborales" />}
-          {hasPermission('festivos') && <SidebarItem id="holidays" icon={Palmtree} label="Días Festivos" />}
-          {hasPermission('tareas') && <SidebarItem id="tasks" icon={ClipboardList} label="Grupos de Tareas" />}
-          {hasPermission('det_tareas') && <SidebarItem id="task-details" icon={ListTodo} label="Subtareas Detalladas" />}
-          {hasPermission('novedades') && <SidebarItem id="novedades" icon={Activity} label="Gestión de Novedades" />}
+          {hasPermission('programacion') && <SidebarItem id="schedule" icon={Calendar} label={t('programacion_diaria')} />}
+          {hasPermission('turnos') && <SidebarItem id="shifts" icon={Clock} label={t('jornadas_laborales')} />}
+          {hasPermission('festivos') && <SidebarItem id="holidays" icon={Palmtree} label={t('dias_festivos')} />}
+          {hasPermission('tareas') && <SidebarItem id="tasks" icon={ClipboardList} label={t('grupos_tareas')} />}
+          {hasPermission('det_tareas') && <SidebarItem id="task-details" icon={ListTodo} label={t('subtareas')} />}
+          {hasPermission('novedades') && <SidebarItem id="novedades" icon={Activity} label={t('gestion_novedades')} />}
 
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Trabajo Diario
+            {t('trabajo_diario')}
           </div>
-          <SidebarItem id="activity-log" icon={CheckSquare} label="Mis Actividades" />
-          <SidebarItem id="activity-calendar" icon={Calendar} label="Calendario de Trabajo" />
+          <SidebarItem id="activity-log" icon={CheckSquare} label={t('registro_actividades')} />
+          <SidebarItem id="activity-calendar" icon={Calendar} label={t('calendario_trabajo')} />
 
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Sistemas y Auditoría
+            {t('sistemas_auditoria')}
           </div>
-          {hasPermission('usuarios') && <SidebarItem id="users" icon={User} label="Gestión de Usuarios" />}
-          {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label="Seguridad y Roles" />}
-          {hasPermission('logs') && <SidebarItem id="logs" icon={History} label="Auditoría de Acceso" />}
-          {hasPermission('reportes') && <SidebarItem id="summary" icon={FileText} label="Reportes Maestros" />}
+          {hasPermission('usuarios') && <SidebarItem id="users" icon={User} label={t('usuarios_perfiles')} />}
+          {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label={t('seguridad_roles')} />}
+          {hasPermission('logs') && <SidebarItem id="logs" icon={History} label={t('auditoria_acceso')} />}
+          {hasPermission('reportes') && <SidebarItem id="summary" icon={FileText} label={t('reportes_maestros')} />}
         </nav>
 
         {/* User Card */}
@@ -392,14 +395,14 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}>
-                {currentUser ? `${currentUser.primer_nombre} ${currentUser.primer_apellido || ''}` : 'Conectando...'}
+                {currentUser ? `${currentUser.primer_nombre} ${currentUser.primer_apellido || ''}` : t('conectando')}
               </div>
               <div style={{ 
                 fontSize: '0.7rem', 
                 color: 'var(--text-secondary)',
                 fontWeight: 500
               }}>
-                Sesión Activa • {currentUser?.role_name || 'Personal'}
+                {t('sesion_activa')} • {currentUser?.role_name || 'Personal'}
               </div>
             </div>
           </div>
@@ -423,7 +426,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             }}
           >
             <LogOut size={14} />
-            Cerrar Sesión
+            {t('cerrar_sesion')}
           </button>
         </div>
       </aside>
@@ -438,19 +441,19 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         }}>
           <div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
-              {activeTab === 'summary' && 'Panel Ejecutivo'}
-              {activeTab === 'employees' && 'Gestión de Personal'}
-              {activeTab === 'costs' && 'Control de Presupuesto'}
-              {activeTab === 'schedule' && 'Planeación de Actividades'}
-              {activeTab === 'roles' && 'Seguridad Sistémica'}
-              {activeTab === 'users' && 'Gestión de Identidades'}
-              {activeTab === 'logs' && 'Auditoría de Operaciones'}
-              {activeTab === 'shifts' && 'Gestión de Horarios'}
-              {activeTab === 'activity-log' && 'Mis Actividades'}
-              {activeTab === 'activity-calendar' && 'Calendario de Actividades'}
+              {activeTab === 'summary' && t('panel_ejecutivo')}
+              {activeTab === 'employees' && t('gestion_personal')}
+              {activeTab === 'costs' && t('control_presupuesto')}
+              {activeTab === 'schedule' && t('planeacion_actividades')}
+              {activeTab === 'roles' && t('seguridad_sistemica')}
+              {activeTab === 'users' && t('gestion_identidades')}
+              {activeTab === 'logs' && t('auditoria_operaciones')}
+              {activeTab === 'shifts' && t('gestion_horarios')}
+              {activeTab === 'activity-log' && t('mis_actividades')}
+              {activeTab === 'activity-calendar' && t('calendario_actividades')}
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginTop: '6px', fontSize: '1rem' }}>
-              Inteligencia Operativa e Inventario de Conocimiento
+              {t('inteligencia_operativa')}
             </p>
           </div>
 
@@ -466,7 +469,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             }}>
               <Search size={18} color="rgba(255,255,255,0.2)" />
               <input 
-                placeholder="Buscar en el sistema..." 
+                placeholder={t('buscar')} 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ 
@@ -479,6 +482,26 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 }} 
               />
             </div>
+            
+            <button 
+              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+              className="glass-card neon-btn-active"
+              style={{ 
+                padding: '8px 12px', 
+                height: '42px', 
+                fontSize: '0.75rem', 
+                fontWeight: 800,
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                border: '1px solid var(--accent-primary)'
+              }}
+              title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            >
+              <Globe size={16} />
+              {language === 'es' ? 'ES' : 'EN'}
+            </button>
             
             <button className="glass-card" style={{ padding: '12px', cursor: 'pointer', border: 'none' }} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
               {theme === 'dark' ? <Sun size={20} color="var(--accent-primary)" /> : <Moon size={20} color="var(--accent-primary)" />}
@@ -523,7 +546,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             {(activeTab === 'activity-log' || activeTab === 'activity-calendar' || hasPermission(activeTab === 'schedule' ? 'programacion' : (activeTab === 'costs' ? 'costos' : (activeTab === 'employees' ? 'empleados' : (activeTab === 'shifts' ? 'turnos' : activeTab))), 'crear')) && (
               <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="neon-btn" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Plus size={20} />
-                <span>Registrar Nuevo</span>
+                <span>{t('registrar_nuevo')}</span>
               </button>
             )}
           </div>
@@ -535,10 +558,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '30px', marginBottom: '40px' }}>
               <div className="glass-card" style={{ padding: '30px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Personal Activo</div>
+                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>{t('personal_activo')}</div>
                   <Users size={18} color="var(--accent-primary)" />
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.totalEmployees} <span style={{ fontSize: '1rem', color: 'var(--success)' }}>En Nómina</span></div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.totalEmployees} <span style={{ fontSize: '1rem', color: 'var(--success)' }}>{t('en_nomina')}</span></div>
                 <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px', marginTop: '20px', overflow: 'hidden' }}>
                   <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--accent-primary)', boxShadow: '0 0 10px var(--accent-primary)' }} />
                 </div>
@@ -546,10 +569,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
 
               <div className="glass-card" style={{ padding: '30px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Centros de Negocio</div>
+                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>{t('centros_negocio')}</div>
                   <DollarSign size={18} color="var(--accent-secondary)" />
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.activeCostCenters} <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Operativos</span></div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.activeCostCenters} <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{t('operativos')}</span></div>
                 <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px', marginTop: '20px', overflow: 'hidden' }}>
                   <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--accent-secondary)' }} />
                 </div>
@@ -557,10 +580,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
 
               <div className="glass-card" style={{ padding: '30px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Progreso Global</div>
+                  <div style={{ color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>{t('progreso_global')}</div>
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--success)', boxShadow: '0 0 10px var(--success)' }} />
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.overallProgress}% <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Ejecutado</span></div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{loadingStats ? '...' : stats.overallProgress}% <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{t('ejecutado')}</span></div>
                 <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px', marginTop: '20px', overflow: 'hidden' }}>
                   <div style={{ width: `${stats.overallProgress}%`, height: '100%', backgroundColor: 'var(--success)', boxShadow: '0 0 10px var(--success)' }} />
                 </div>
@@ -572,7 +595,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Activity size={20} color="var(--accent-primary)" />
-                  Asignaciones Tácticas Recientes
+                  {t('asignaciones_recientes')}
                 </h3>
                 <button 
                   onClick={() => setActiveTab('schedule')}

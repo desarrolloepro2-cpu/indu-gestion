@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, Globe } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Login = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,28 @@ const Login = () => {
         position: 'relative',
         overflow: 'hidden'
       }}>
+        {/* Language Toggle in Login */}
+        <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+          <button 
+            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+            className="glass-card"
+            style={{ 
+              padding: '6px 10px', 
+              fontSize: '0.7rem', 
+              fontWeight: 800,
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              cursor: 'pointer',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: 'var(--text-primary)'
+            }}
+          >
+            <Globe size={14} />
+            {language === 'es' ? 'ES' : 'EN'}
+          </button>
+        </div>
+
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <div style={{
             display: 'inline-block',
@@ -79,13 +103,13 @@ const Login = () => {
             <span style={{ color: '#94A3B8' }}>Conocimiento</span>
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.94rem', marginTop: '10px', fontWeight: 500 }}>
-            Sistema de Gestión de Conocimiento
+            {t('sistema_gestion')}
           </p>
         </div>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label className="input-label">Correo Electrónico</label>
+            <label className="input-label">{t('correo')}</label>
             <div style={{ position: 'relative' }}>
               <User size={18} style={{ 
                 position: 'absolute', 
@@ -106,7 +130,7 @@ const Login = () => {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Contraseña</label>
+            <label className="input-label">{t('password')}</label>
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={{ 
                 position: 'absolute', 
@@ -134,7 +158,7 @@ const Login = () => {
             style={{ width: '100%', marginTop: '10px' }}
             disabled={loading}
           >
-            {loading ? 'Validando...' : 'Iniciar Sesión'}
+            {loading ? t('validando') : t('ingresar')}
           </button>
         </form>
       </div>

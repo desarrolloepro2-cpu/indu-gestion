@@ -6,8 +6,8 @@ import 'moment/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '../supabaseClient';
 import { Calendar as CalendarIcon, Filter, CheckCircle, Clock } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
-moment.locale('es');
 const localizer = momentLocalizer(moment);
 
 interface ActivityCalendarViewProps {
@@ -17,12 +17,17 @@ interface ActivityCalendarViewProps {
 }
 
 const ActivityCalendarView: React.FC<ActivityCalendarViewProps> = ({ currentUser, onEdit, refreshKey }) => {
+  const { language, t } = useLanguage();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState<any>('week');
+
+  useEffect(() => {
+    moment.locale(language);
+  }, [language]);
 
   const isAdmin = ['administrador', 'superadmin', 'supervisor'].includes((currentUser?.role_name || '').toLowerCase());
 
@@ -138,10 +143,10 @@ const ActivityCalendarView: React.FC<ActivityCalendarViewProps> = ({ currentUser
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <CalendarIcon size={24} color="var(--accent-primary)" />
-            Cronograma de Actividades
+            {t('cronograma_actividades')}
           </h2>
           <p style={{ margin: '5px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            {isAdmin ? 'Visualización global de tiempos reportados por el equipo' : 'Visualización de tus tiempos reportados'}
+            {isAdmin ? t('visualizacion_global') : t('visualizacion_personal')}
           </p>
         </div>
 
@@ -161,7 +166,7 @@ const ActivityCalendarView: React.FC<ActivityCalendarViewProps> = ({ currentUser
                 cursor: 'pointer'
               }}
             >
-              <option value="all" style={{ background: 'var(--bg-color)' }}>Todos los Empleados</option>
+              <option value="all" style={{ background: 'var(--bg-color)' }}>{t('todos_los_empleados')}</option>
               {users.map((u, i) => (
                 <option key={i} value={u} style={{ background: 'var(--bg-color)' }}>{u}</option>
               ))}
@@ -197,17 +202,17 @@ const ActivityCalendarView: React.FC<ActivityCalendarViewProps> = ({ currentUser
                 }
               }}
               messages={{
-                next: "Sig",
-                previous: "Ant",
-                today: "Hoy",
-                month: "Mes",
-                week: "Semana",
-                day: "Día",
-                agenda: "Agenda",
-                date: "Fecha",
-                time: "Hora",
-                event: "Actividad",
-                noEventsInRange: "No hay actividades registradas en este período."
+                next: language === 'es' ? 'Sig' : 'Next',
+                previous: language === 'es' ? 'Ant' : 'Prev',
+                today: t('hoy'),
+                month: t('mes'),
+                week: t('semana'),
+                day: t('dia'),
+                agenda: t('agenda'),
+                date: language === 'es' ? 'Fecha' : 'Date',
+                time: language === 'es' ? 'Hora' : 'Time',
+                event: language === 'es' ? 'Actividad' : 'Activity',
+                noEventsInRange: language === 'es' ? 'No hay actividades registradas en este período.' : 'No reported activities in this period.'
               }}
               components={{
                 event: (props: any) => (

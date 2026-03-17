@@ -3,8 +3,17 @@ import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import PasswordChangeForce from './components/PasswordChangeForce';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
+  return (
+    <LanguageProvider>
+      <MainApp />
+    </LanguageProvider>
+  );
+}
+
+function MainApp() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
