@@ -23,7 +23,9 @@ import {
   ListTodo,
   FileText,
   Palmtree,
-  Globe
+  Globe,
+  Menu,
+  X
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import EmployeeList from './EmployeeList';
@@ -101,6 +103,18 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Device detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) setIsSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Dynamic Tab Title
   useEffect(() => {
@@ -361,6 +375,21 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
       backgroundColor: 'var(--bg-color)',
       position: 'relative'
     }}>
+      {/* Mobile Drawer Backdrop */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 998,
+            animation: 'fadeIn 0.3s ease'
+          }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
         width: '280px',
@@ -369,11 +398,30 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         display: 'flex',
         flexDirection: 'column',
         padding: '30px 20px',
-        position: 'sticky',
+        position: isMobile ? 'fixed' : 'sticky',
+        left: isMobile ? (isSidebarOpen ? '0' : '-280px') : '0',
         top: 0,
         height: '100vh',
-        zIndex: 50
+        zIndex: 999,
+        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: isMobile && isSidebarOpen ? '10px 0 30px rgba(0,0,0,0.5)' : 'none'
       }}>
+        {isMobile && (
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            style={{
+              position: 'absolute',
+              right: '15px',
+              top: '15px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer'
+            }}
+          >
+            <X size={20} />
+          </button>
+        )}
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column',
@@ -522,14 +570,34 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: isMobile ? '20px 15px' : '40px 60px', overflowY: 'auto' }}>
         <header style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'flex-start', 
-          marginBottom: '50px' 
+          alignItems: isMobile ? 'center' : 'flex-start', 
+          marginBottom: isMobile ? '30px' : '50px',
+          flexDirection: isMobile ? 'row' : 'row'
         }}>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            {isMobile && (
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid var(--border-color)',
+                  padding: '10px',
+                  borderRadius: '12px',
+                  color: 'var(--accent-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Menu size={24} />
+              </button>
+            )}
+            <div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
               {activeTab === 'summary' && t('panel_ejecutivo')}
               {activeTab === 'employees' && t('gestion_personal')}
@@ -542,36 +610,39 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               {activeTab === 'activity-log' && t('mis_actividades')}
               {activeTab === 'activity-calendar' && t('calendario_actividades')}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '6px', fontSize: '1rem' }}>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '6px', fontSize: isMobile ? '0.8rem' : '1rem' }}>
               {t('inteligencia_operativa')}
             </p>
           </div>
+        </div>
 
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <div style={{ 
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              borderRadius: '12px',
-              padding: '10px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              border: '1px solid var(--border-color)'
-            }}>
-              <Search size={18} color="rgba(255,255,255,0.2)" />
-              <input 
-                placeholder={t('buscar')} 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: 'white', 
-                  outline: 'none',
-                  fontSize: '0.9rem',
-                  minWidth: '250px'
-                }} 
-              />
-            </div>
+            {!isMobile && (
+              <div style={{ 
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderRadius: '12px',
+                padding: '10px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                border: '1px solid var(--border-color)'
+              }}>
+                <Search size={18} color="rgba(255,255,255,0.2)" />
+                <input 
+                  placeholder={t('buscar')} 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'white', 
+                    outline: 'none',
+                    fontSize: '0.9rem',
+                    minWidth: '250px'
+                  }} 
+                />
+              </div>
+            )}
             
             <button 
               onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
@@ -593,8 +664,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               {language === 'es' ? 'ES' : 'EN'}
             </button>
             
-            <button className="glass-card" style={{ padding: '12px', cursor: 'pointer', border: 'none' }} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-              {theme === 'dark' ? <Sun size={20} color="var(--accent-primary)" /> : <Moon size={20} color="var(--accent-primary)" />}
+            <button className="glass-card" style={{ padding: isMobile ? '10px' : '12px', cursor: 'pointer', border: 'none' }} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+              {theme === 'dark' ? <Sun size={isMobile ? 18 : 20} color="var(--accent-primary)" /> : <Moon size={isMobile ? 18 : 20} color="var(--accent-primary)" />}
             </button>
             <div style={{ position: 'relative' }}>
               <button 
@@ -611,7 +682,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                   setUnreadCount(0);
                 }}
               >
-                <Bell size={20} color={unreadCount > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)'} />
+                <Bell size={isMobile ? 18 : 20} color={unreadCount > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)'} />
                 {unreadCount > 0 && (
                   <span style={{
                     position: 'absolute',

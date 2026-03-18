@@ -79,6 +79,14 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
     }).format(date);
   };
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
       <div className="spinner-small" style={{ width: '40px', height: '40px', borderTopColor: 'var(--accent-primary)' }}></div>
@@ -95,126 +103,247 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
           </p>
         </div>
       ) : (
-        <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-          {/* Header de la Tabla Simulada */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '150px 2fr 1.5fr 150px 120px 80px', 
-            gap: '15px', 
-            padding: '16px 20px', 
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-            fontSize: '0.8rem',
-            fontWeight: 800,
-            color: 'var(--text-secondary)',
-            textTransform: 'uppercase',
-            letterSpacing: '1px'
-          }}>
-            <div>Horario</div>
-            <div>Actividad y Detalle</div>
-            <div>Clasificación y Novedad</div>
-            <div>Ejecutor</div>
-            <div>Estado</div>
-            <div>Acciones</div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+        isMobile ? (
+          /* Vista de Tarjetas para Móviles */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {filteredLogs.map(log => (
               <div 
                 key={log.id} 
-                className="animate-fade-in" 
+                className="glass-card animate-fade-in" 
                 style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '150px 2fr 1.5fr 150px 120px 80px', 
-                  gap: '15px', 
-                  padding: '16px 20px', 
-                  alignItems: 'center',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
-                  transition: 'background-color 0.2s',
-                  backgroundColor: 'transparent'
+                  padding: '20px', 
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  backgroundColor: 'rgba(255,255,255,0.01)',
+                  borderRadius: '16px'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                {/* Fechas */}
-                <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-                    <Calendar size={12} style={{ color: 'var(--accent-secondary)' }} />
-                    {formatDate(log.fecha_inicio)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                    <Clock size={12} style={{ color: 'var(--accent-secondary)' }} />
-                    {log.fecha_fin ? formatDate(log.fecha_fin) : 'En progreso'}
-                  </div>
-                </div>
-
-                {/* Actividad */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {log.tareas?.nombre || 'Sin tarea'}
-                  </span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>
-                    {log.det_tareas?.nombre || 'Sin detalle'}
-                  </span>
-                </div>
-
-                {/* Clasificación / Check */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                      <Hash size={10} style={{ color: 'var(--success)' }} /> {log.centros_costos?.codigo || 'N/A'}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {log.tareas?.nombre || 'Sin tarea'}
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                      <Layers size={10} style={{ color: '#00d4ff' }} /> {log.turnos?.nombre_turno || 'N/A'}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                      {log.det_tareas?.nombre || 'Sin detalle'}
                     </span>
                   </div>
-                  <div 
-                    title={log.observacion}
-                    style={{ 
-                      fontSize: '0.8rem', 
-                      color: 'var(--text-secondary)', 
-                      fontStyle: 'italic', 
-                      whiteSpace: 'nowrap', 
-                      overflow: 'hidden', 
-                      textOverflow: 'ellipsis',
-                      maxWidth: '100%'
-                    }}
-                  >
-                    "{log.observacion}"
-                  </div>
-                </div>
-
-                {/* Empleado Ejecutor */}
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600 }}>
-                  {log.perfiles?.empleados?.primer_nombre} <br/> {log.perfiles?.empleados?.primer_apellido}
-                </div>
-
-                {/* Estado Aprobación */}
-                <div>
                   <span style={{ 
-                    display: 'inline-flex', 
+                    display: 'flex', 
                     alignItems: 'center', 
-                    gap: '6px', 
-                    fontSize: '0.7rem', 
+                    gap: '4px', 
+                    fontSize: '0.65rem', 
                     fontWeight: 800,
                     backgroundColor: log.aprobado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
                     color: log.aprobado ? 'var(--success)' : 'var(--error)',
-                    padding: '6px 10px',
+                    padding: '4px 10px',
                     borderRadius: '20px',
-                    textTransform: 'uppercase'
+                    textTransform: 'uppercase',
+                    border: `1px solid ${log.aprobado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
                   }}>
-                    {log.aprobado ? <CheckCircle size={14} /> : <XCircle size={14} />}
                     {log.aprobado ? 'Aprobado' : 'Pendiente'}
                   </span>
                 </div>
 
-                {/* Botones de acción */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                    <Calendar size={14} style={{ color: 'var(--accent-secondary)' }} />
+                    <span style={{ fontWeight: 500 }}>{formatDate(log.fecha_inicio)}</span>
+                  </div>
+                  {log.fecha_fin && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                      <Clock size={14} style={{ color: 'var(--accent-secondary)' }} />
+                      <span style={{ fontWeight: 500 }}>{formatDate(log.fecha_fin)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <Hash size={10} style={{ color: 'var(--success)' }} /> {log.centros_costos?.codigo || 'N/A'}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <Layers size={10} style={{ color: '#00d4ff' }} /> {log.turnos?.nombre_turno || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
+                {log.observacion && (
+                  <div style={{ 
+                    padding: '12px', 
+                    borderRadius: '10px', 
+                    backgroundColor: 'rgba(255,255,255,0.02)', 
+                    fontSize: '0.8rem', 
+                    color: 'var(--text-secondary)', 
+                    fontStyle: 'italic',
+                    marginBottom: '15px',
+                    border: '1px solid rgba(255,255,255,0.02)'
+                  }}>
+                    "{log.observacion}"
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {log.perfiles?.empleados?.primer_nombre} {log.perfiles?.empleados?.primer_apellido}
+                  </div>
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <button 
+                      onClick={() => onEdit(log)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '5px' }}
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    {['administrador', 'superadmin', 'supervisor'].includes((currentUser?.role_name || '').toLowerCase()) && (
+                      <div style={{ position: 'relative' }}>
+                        <button 
+                          onClick={() => setConfirmingId(confirmingId === log.id ? null : log.id)}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: '5px' }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        {confirmingId === log.id && (
+                          <div className="glass-card animate-scale-in" style={{ 
+                            position: 'absolute', 
+                            right: 0, 
+                            bottom: '100%', 
+                            marginBottom: '10px',
+                            zIndex: 100, 
+                            padding: '12px', 
+                            minWidth: '180px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                            border: '1px solid var(--error)',
+                            backgroundColor: 'rgba(15, 15, 25, 0.98)'
+                          }}>
+                            <p style={{ fontSize: '0.75rem', marginBottom: '12px', fontWeight: 600 }}>¿Eliminar registro?</p>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button onClick={() => setConfirmingId(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem' }}>No</button>
+                              <button onClick={() => handleDelete(log.id)} style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>Sí, borrar</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Vista de Tabla para Escritorio */
+          <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '150px 2fr 1.5fr 150px 120px 80px', 
+              gap: '15px', 
+              padding: '16px 20px', 
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: 'var(--text-secondary)',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              <div>Horario</div>
+              <div>Actividad y Detalle</div>
+              <div>Clasificación y Novedad</div>
+              <div>Ejecutor</div>
+              <div>Estado</div>
+              <div>Acciones</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {filteredLogs.map(log => (
+                <div 
+                  key={log.id} 
+                  className="animate-fade-in" 
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '150px 2fr 1.5fr 150px 120px 80px', 
+                    gap: '15px', 
+                    padding: '16px 20px', 
+                    alignItems: 'center',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                    transition: 'background-color 0.2s',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {/* Fechas */}
+                  <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+                      <Calendar size={12} style={{ color: 'var(--accent-secondary)' }} />
+                      {formatDate(log.fecha_inicio)}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                      <Clock size={12} style={{ color: 'var(--accent-secondary)' }} />
+                      {log.fecha_fin ? formatDate(log.fecha_fin) : 'En progreso'}
+                    </div>
+                  </div>
+
+                  {/* Actividad */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {log.tareas?.nombre || 'Sin tarea'}
+                    </span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>
+                      {log.det_tareas?.nombre || 'Sin detalle'}
+                    </span>
+                  </div>
+
+                  {/* Clasificación / Check */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <Hash size={10} style={{ color: 'var(--success)' }} /> {log.centros_costos?.codigo || 'N/A'}
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <Layers size={10} style={{ color: '#00d4ff' }} /> {log.turnos?.nombre_turno || 'N/A'}
+                      </span>
+                    </div>
+                    <div 
+                      title={log.observacion}
+                      style={{ 
+                        fontSize: '0.8rem', 
+                        color: 'var(--text-secondary)', 
+                        fontStyle: 'italic', 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%'
+                      }}
+                    >
+                      "{log.observacion}"
+                    </div>
+                  </div>
+
+                  {/* Empleado Ejecutor */}
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                    {log.perfiles?.empleados?.primer_nombre} <br/> {log.perfiles?.empleados?.primer_apellido}
+                  </div>
+
+                  {/* Estado Aprobación */}
+                  <div>
+                    <span style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '6px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: 800,
+                      backgroundColor: log.aprobado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      color: log.aprobado ? 'var(--success)' : 'var(--error)',
+                      padding: '6px 10px',
+                      borderRadius: '20px',
+                      textTransform: 'uppercase'
+                    }}>
+                      {log.aprobado ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                      {log.aprobado ? 'Aprobado' : 'Pendiente'}
+                    </span>
+                  </div>
+
+                  {/* Botones de acción */}
                   <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
                     <button 
                       onClick={() => onEdit(log)}
                       style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
                     >
                       <Edit2 size={18} />
                     </button>
@@ -237,8 +366,6 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                             opacity: 0.8, 
                             transition: 'all 0.2s' 
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -257,29 +384,19 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                           }}>
                             <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600, color: 'white' }}>¿Realmente quieres eliminar este registro?</p>
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                              <button 
-                                onClick={() => setConfirmingId(null)}
-                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
-                              >
-                                No
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(log.id)}
-                                style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
-                              >
-                                Eliminar
-                              </button>
+                              <button onClick={() => setConfirmingId(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>No</button>
+                              <button onClick={() => handleDelete(log.id)} style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}>Eliminar</button>
                             </div>
                           </div>
                         )}
                       </>
                     )}
                   </div>
-
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )
       )}
     </div>
   );
