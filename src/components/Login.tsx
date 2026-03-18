@@ -9,35 +9,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [showConflict, setShowConflict] = useState(false);
-  const [conflictDevice, setConflictDevice] = useState('');
-  const [sessionData, setSessionData] = useState<any>(null);
-
-  const getDeviceName = () => {
-    const ua = navigator.userAgent;
-    let browser = "Browser";
-    if (ua.includes("Firefox")) browser = "Firefox";
-    else if (ua.includes("Chrome")) browser = "Chrome";
-    else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
-    else if (ua.includes("Edge")) browser = "Edge";
-    
-    let os = "Device";
-    if (ua.includes("Windows")) os = "Windows";
-    else if (ua.includes("Mac")) os = "Mac";
-    else if (ua.includes("Android")) os = "Android";
-    else if (ua.includes("iPhone")) os = "iPhone";
-    
-    return `${browser} on ${os}`;
-  };
-
-  const updateActiveSession = async (userId: string, sessionId: string) => {
-    await supabase.from('perfiles').update({
-      id_sesion_activa: sessionId,
-      nombre_dispositivo_activo: getDeviceName(),
-      ultimo_acceso: new Date().toISOString()
-    }).eq('id', userId);
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,55 +19,24 @@ const Login = () => {
       password,
     });
 
+    // Log the access attempt
+    try {
+      if (!error && data?.user) {
+        await supabase.from('logs_accesos').insert({
+          id_usuario: data.user.id,
+          fecha_ingreso: new Date().toISOString(),
+          ip_acceso: 'web-client',
+          exitoso: true
+        });
+      }
+    } catch (logErr) {
+      console.error('Error logging access:', logErr);
+    }
+
     if (error) {
       setMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
-    if (data?.user && data.session) {
-      // Check for active session in profile
-      const { data: profile } = await supabase
-        .from('perfiles')
-        .select('id_sesion_activa, nombre_dispositivo_activo')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profile?.id_sesion_activa && profile.id_sesion_activa !== data.session.access_token) {
-        setConflictDevice(profile.nombre_dispositivo_activo || t('dispositivo_desconocido'));
-        setSessionData(data);
-        setShowConflict(true);
-        setLoading(false);
-        return;
-      }
-
-      await updateActiveSession(data.user.id, data.session.access_token);
-      
-      // Log access
-      await supabase.from('logs_accesos').insert({
-        id_usuario: data.user.id,
-        fecha_ingreso: new Date().toISOString(),
-        ip_acceso: getDeviceName(),
-        exitoso: true
-      });
     }
     setLoading(false);
-  };
-
-  const handleConfirmConflict = async (proceed: boolean) => {
-    if (!sessionData) return;
-    
-    if (proceed) {
-      setLoading(true);
-      await updateActiveSession(sessionData.user.id, sessionData.session.access_token);
-      setShowConflict(false);
-      setLoading(false);
-      // The session is already active in Supabase Auth, so the app will redirect to Dashboard automatically
-    } else {
-      await supabase.auth.signOut();
-      setShowConflict(false);
-      setSessionData(null);
-    }
   };
 
   return (
@@ -221,48 +161,6 @@ const Login = () => {
           </button>
         </form>
       </div>
-
-      {showConflict && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div className="glass-card animate-scale-in" style={{
-            maxWidth: '400px',
-            padding: '30px',
-            textAlign: 'center',
-            border: '1px solid var(--accent-primary)',
-            backgroundColor: 'rgba(15, 15, 25, 0.98)'
-          }}>
-            <h3 style={{ marginBottom: '15px', color: 'var(--accent-primary)', fontWeight: 800 }}>{t('sesion_conflicto')}</h3>
-            <p style={{ marginBottom: '25px', fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-              {t('pregunta_sesion').replace('{device}', conflictDevice)}
-            </p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button 
-                onClick={() => handleConfirmConflict(false)}
-                className="glass-card"
-                style={{ padding: '10px 25px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
-              >
-                {t('no')}
-              </button>
-              <button 
-                onClick={() => handleConfirmConflict(true)}
-                className="neon-btn"
-                style={{ padding: '10px 35px' }}
-              >
-                {t('si')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -116,39 +116,6 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Monitor Active Session (Single Device Restriction)
-  useEffect(() => {
-    if (!session?.user?.id) return;
-
-    const checkSession = async () => {
-      const { data: profile, error } = await supabase
-        .from('perfiles')
-        .select('id_sesion_activa')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!error && profile?.id_sesion_activa) {
-        // If the session in DB is different from our current token, it means someone else logged in
-        if (profile.id_sesion_activa !== session.access_token) {
-          alert(t('sesion_expirada'));
-          await supabase.auth.signOut();
-        }
-      }
-    };
-
-    // Check on mount and then every 30 seconds
-    checkSession();
-    const interval = setInterval(checkSession, 30000);
-
-    // Also check when the window gains focus (best for immediate detection)
-    window.addEventListener('focus', checkSession);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', checkSession);
-    };
-  }, [session, t]);
-
   // Dynamic Tab Title
   useEffect(() => {
     const tabTitles: Record<string, string> = {
