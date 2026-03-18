@@ -54,6 +54,7 @@ import AccessLogList from './AccessLogList';
 import ActivityLogList from './ActivityLogList';
 import ActivityLogForm from './ActivityLogForm';
 import ActivityCalendarView from './ActivityCalendarView';
+import PasswordChangeForm from './PasswordChangeForm';
 
 interface DashboardProps {
   session: any;
@@ -99,6 +100,30 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Dynamic Tab Title
+  useEffect(() => {
+    const tabTitles: Record<string, string> = {
+      summary: t('panel_general'),
+      employees: t('gestion_talento'),
+      costs: t('centros_costo'),
+      schedule: t('programacion_diaria'),
+      roles: t('seguridad_roles'),
+      shifts: t('jornadas_laborales'),
+      logs: t('auditoria_acceso'),
+      jobs: t('cargos'),
+      groups: t('grupos_trabajo'),
+      holidays: t('dias_festivos'),
+      tasks: t('grupos_tareas'),
+      'task-details': t('subtareas'),
+      novedades: t('gestion_novedades'),
+      users: t('usuarios_perfiles'),
+      'activity-log': t('registro_actividades'),
+      'activity-calendar': t('calendario_trabajo')
+    };
+    document.title = `${tabTitles[activeTab] || 'Dashboard'} | InduConocimiento`;
+  }, [activeTab, t]);
 
   // Stats State
   const [stats, setStats] = useState({
@@ -311,6 +336,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
     if (editingItem && editingItem.primer_nombre) return <EmployeeForm {...props} />;
     if (editingItem && editingItem.nombre_centro) return <CostCenterForm {...props} />;
     if (editingItem && editingItem.serial) return <ProgramacionForm {...props} />;
+    if (editingItem && editingItem.isPasswordChange) return <PasswordChangeForm onClose={handleCloseForm} />;
 
     if (activeTab === 'employees') return <EmployeeForm {...props} />;
     if (activeTab === 'costs') return <CostCenterForm {...props} />;
@@ -373,7 +399,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               src="/logo_indutronica.png" 
               alt="Logo" 
               style={{ 
-                width: '100%', 
+                width: '50%', 
                 height: 'auto', 
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 10px rgba(58, 75, 224, 0.4))'
@@ -492,31 +518,6 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               </div>
             </div>
           </div>
-          <button 
-            onClick={() => {
-              window.location.hash = '';
-              supabase.auth.signOut();
-            }}
-            style={{ 
-              width: '100%', 
-              marginTop: '15px', 
-              padding: '8px', 
-              backgroundColor: 'rgba(244, 63, 94, 0.1)', 
-              color: '#f43f5e',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <LogOut size={14} />
-            {t('cerrar_sesion')}
-          </button>
         </div>
       </aside>
 
@@ -696,45 +697,144 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               )}
             </div>
 
-            {/* Profile Avatar Top Right */}
-            <div 
-              onClick={() => currentUser?.id && handleEdit(currentUser)}
-              style={{ 
-                width: '45px', 
-                height: '45px', 
-                borderRadius: '12px', 
-                border: '2px solid var(--accent-primary)',
-                boxShadow: '0 0 10px rgba(0, 212, 255, 0.2)',
-                overflow: 'hidden',
-                cursor: 'pointer'
-              }}
-            >
-              {currentUser?.foto_url ? (
-                <img src={currentUser.foto_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <div style={{ 
-                  width: '100%', height: '100%', 
-                  backgroundColor: 'var(--surface-color)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center' 
-                }}>
-                  <User size={24} color="var(--accent-primary)" />
-                </div>
+            {/* Profile Avatar Top Right with Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <div 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '12px', 
+                  border: isProfileOpen ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  boxShadow: isProfileOpen ? '0 0 15px rgba(0, 212, 255, 0.4)' : '0 0 10px rgba(0, 212, 255, 0.2)',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: 'rgba(255,255,255,0.02)'
+                }}
+              >
+                {currentUser?.foto_url ? (
+                  <img src={currentUser.foto_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ 
+                    width: '100%', height: '100%', 
+                    backgroundColor: 'var(--surface-color)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }}>
+                    <User size={24} color="var(--accent-primary)" />
+                  </div>
+                )}
+              </div>
+
+              {isProfileOpen && (
+                <>
+                  <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} 
+                    onClick={() => setIsProfileOpen(false)} 
+                  />
+                  <div className="glass-card animate-scale-in" style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '15px',
+                    width: '220px',
+                    zIndex: 1000,
+                    padding: '8px',
+                    border: '1px solid var(--accent-primary)',
+                    boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
+                    backgroundColor: 'rgba(15, 15, 25, 0.98)',
+                    backdropFilter: 'blur(20px)'
+                  }}>
+                    <div style={{ padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {currentUser?.primer_nombre} {currentUser?.primer_apellido}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                        {currentUser?.role_name || t('usuario')}
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => { setIsProfileOpen(false); handleEdit(currentUser); }}
+                      style={{ 
+                        width: '100%', padding: '10px 12px', textAlign: 'left', background: 'transparent', border: 'none', 
+                        color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px',
+                        fontSize: '0.85rem'
+                      }}
+                      className="dropdown-item"
+                    >
+                      <User size={16} color="var(--accent-primary)" />
+                      {t('configuracion_cuenta')}
+                    </button>
+
+                    <button 
+                      onClick={() => { setIsProfileOpen(false); handleEdit({ isPasswordChange: true }); }}
+                      style={{ 
+                        width: '100%', padding: '10px 12px', textAlign: 'left', background: 'transparent', border: 'none', 
+                        color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px',
+                        fontSize: '0.85rem'
+                      }}
+                      className="dropdown-item"
+                    >
+                      <Shield size={16} color="var(--accent-primary)" />
+                      {t('contraseñas')}
+                    </button>
+
+                    <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
+
+                    <button 
+                      onClick={() => {
+                        window.location.hash = '';
+                        supabase.auth.signOut();
+                      }}
+                      style={{ 
+                        width: '100%', padding: '10px 12px', textAlign: 'left', background: 'transparent', border: 'none', 
+                        color: '#f43f5e', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px',
+                        fontSize: '0.85rem', fontWeight: 600
+                      }}
+                      className="dropdown-item logout"
+                    >
+                      <LogOut size={16} />
+                      {t('salir')}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
         </header>
 
         {/* New Button logic */}
-        {(activeTab === 'employees' || activeTab === 'costs' || activeTab === 'schedule' || activeTab === 'activity-log' || activeTab === 'activity-calendar' || activeTab === 'shifts') && (
+        {(activeTab === 'employees' || activeTab === 'costs' || activeTab === 'schedule' || activeTab === 'activity-log' || activeTab === 'activity-calendar' || activeTab === 'shifts' || activeTab === 'holidays' || activeTab === 'jobs' || activeTab === 'groups' || activeTab === 'tasks' || activeTab === 'task-details' || activeTab === 'novedades' || activeTab === 'roles' || activeTab === 'users') && (
           <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'flex-end' }}>
-            {(activeTab === 'activity-log' || activeTab === 'activity-calendar' || hasPermission(activeTab === 'schedule' ? 'programacion' : (activeTab === 'costs' ? 'costos' : (activeTab === 'employees' ? 'empleados' : (activeTab === 'shifts' ? 'turnos' : activeTab))), 'crear')) && (
-              <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="neon-btn" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Plus size={20} />
-                <span>{t('registrar_nuevo')}</span>
-              </button>
-            )}
+            {(() => {
+              const moduleMap: Record<string, string> = {
+                employees: 'empleados',
+                costs: 'costos',
+                schedule: 'programacion',
+                shifts: 'turnos',
+                holidays: 'festivos',
+                jobs: 'cargos',
+                groups: 'grupos',
+                tasks: 'tareas',
+                'task-details': 'det_tareas',
+                novedades: 'novedades',
+                roles: 'roles',
+                users: 'usuarios'
+              };
+              const module = moduleMap[activeTab as string] || activeTab;
+              if (activeTab === 'activity-log' || activeTab === 'activity-calendar' || hasPermission(module, 'crear')) {
+                return (
+                  <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="neon-btn" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Plus size={20} />
+                    <span>{t('registrar_nuevo')}</span>
+                  </button>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 

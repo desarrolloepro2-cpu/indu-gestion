@@ -71,7 +71,21 @@ const translations: Record<Language, Record<string, string>> = {
     'recientes': 'recientes',
     'no_hay_notificaciones': 'No hay notificaciones nuevas',
     'nueva_actividad': 'Nueva actividad asignada',
-    'ver_toda_la_programacion': 'Ver toda la programación'
+    'ver_toda_la_programacion': 'Ver toda la programación',
+    'cambiar_password': 'Cambiar Contraseña',
+    'nueva_password': 'Nueva Contraseña',
+    'confirmar_password': 'Confirmar Contraseña',
+    'actualizar_password': 'Actualizar Contraseña',
+    'password_actualizada': '¡Contraseña actualizada con éxito!',
+    'las_passwords_no_coinciden': 'Las contraseñas no coinciden.',
+    'password_min_length': 'La contraseña debe tener al menos 8 caracteres.',
+    'error_actualizar_password': 'Error al actualizar la contraseña',
+    'configuracion_cuenta': 'Configuración de cuenta',
+    'contraseñas': 'Contraseñas',
+    'salir': 'Salir',
+    'usuario': 'Usuario',
+    'sesion_activa': 'Sesión Activa',
+    'conectando': 'Conectando...'
   },
   en: {
     // Dashboard / Sidebar
@@ -174,7 +188,19 @@ const translations: Record<Language, Record<string, string>> = {
     'recientes': 'recent',
     'no_hay_notificaciones': 'No new notifications',
     'nueva_actividad': 'New activity assigned',
-    'ver_toda_la_programacion': 'View all scheduling'
+    'ver_toda_la_programacion': 'View all scheduling',
+    'cambiar_password': 'Change Password',
+    'nueva_password': 'New Password',
+    'confirmar_password': 'Confirm Password',
+    'actualizar_password': 'Update Password',
+    'password_actualizada': 'Password updated successfully!',
+    'las_passwords_no_coinciden': 'Passwords do not match.',
+    'password_min_length': 'Password must be at least 8 characters long.',
+    'error_actualizar_password': 'Error updating password',
+    'configuracion_cuenta': 'Account Settings',
+    'contraseñas': 'Passwords',
+    'salir': 'Logout',
+    'usuario': 'User'
   }
 };
 
