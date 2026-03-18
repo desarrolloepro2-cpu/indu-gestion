@@ -61,10 +61,33 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { language, setLanguage, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar'>(() => (localStorage.getItem('dashboardTab') as any) || 'summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar'>(() => {
+    const hash = window.location.hash.replace('#', '');
+    const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar'];
+    if (hash && validTabs.includes(hash)) return hash as any;
+    return (localStorage.getItem('dashboardTab') as any) || 'summary';
+  });
 
+  // Sync hash with State
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar'];
+      if (hash && validTabs.includes(hash)) {
+        setActiveTab(hash as any);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Sync State with Hash and Storage
   useEffect(() => {
     localStorage.setItem('dashboardTab', activeTab);
+    if (window.location.hash !== `#${activeTab}`) {
+      window.location.hash = activeTab;
+    }
   }, [activeTab]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -173,8 +196,15 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   }, [activeTab, refreshKey]);
 
   const SidebarItem = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
-    <div 
-      onClick={() => setActiveTab(id)}
+    <a 
+      href={`#${id}`}
+      onClick={(e) => {
+        // If normal click (not Ctrl, Cmd, Shift, or Alt), handle in app
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          setActiveTab(id);
+        }
+      }}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -187,7 +217,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         marginBottom: '4px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        textDecoration: 'none'
       }}
       className={activeTab === id ? 'active-sidebar-item' : 'sidebar-item'}
     >
@@ -205,7 +236,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           boxShadow: '0 0 10px var(--accent-primary)'
         }} />
       )}
-    </div>
+    </a>
   );
 
   const triggerRefresh = () => setRefreshKey(prev => prev + 1);
