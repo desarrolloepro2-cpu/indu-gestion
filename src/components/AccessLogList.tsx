@@ -19,7 +19,15 @@ const AccessLogList: React.FC<AccessLogListProps> = ({ refreshKey, searchTerm })
     setLoading(true);
     const { data, error } = await supabase
       .from('logs_accesos')
-      .select('*')
+      .select(`
+        *,
+        perfiles:id_usuario (
+          empleados (
+            primer_nombre,
+            primer_apellido
+          )
+        )
+      `)
       .order('fecha_ingreso', { ascending: false })
       .limit(100);
 
@@ -33,7 +41,9 @@ const AccessLogList: React.FC<AccessLogListProps> = ({ refreshKey, searchTerm })
     const search = searchTerm.toLowerCase();
     const ip = (log.ip_acceso || '').toLowerCase();
     const date = new Date(log.fecha_ingreso).toLocaleString().toLowerCase();
-    return ip.includes(search) || date.includes(search);
+    const emp = log.perfiles?.empleados;
+    const name = emp ? `${emp.primer_nombre} ${emp.primer_apellido}`.toLowerCase() : '';
+    return ip.includes(search) || date.includes(search) || name.includes(search);
   });
 
   if (loading) return <div style={{ color: 'var(--text-secondary)' }}>Cargando auditoría de accesos...</div>;
@@ -50,25 +60,32 @@ const AccessLogList: React.FC<AccessLogListProps> = ({ refreshKey, searchTerm })
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 <th style={{ padding: '12px 10px' }}>Fecha y Hora</th>
+                <th style={{ padding: '12px 10px' }}>Usuario</th>
                 <th style={{ padding: '12px 10px' }}>IP de Acceso</th>
                 <th style={{ padding: '12px 10px' }}>Estado</th>
-                <th style={{ padding: '12px 10px' }}>ID Usuario (Auth)</th>
+                <th style={{ padding: '12px 10px' }}>ID de Acceso (Auth)</th>
               </tr>
             </thead>
             <tbody>
-              {filteredLogs.map(log => (
-                <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem' }}>
-                  <td style={{ padding: '12px 10px' }}>{new Date(log.fecha_ingreso).toLocaleString()}</td>
-                  <td style={{ padding: '12px 10px', color: 'var(--accent-primary)', fontFamily: 'monospace' }}>{log.ip_acceso || 'Desconocida'}</td>
-                  <td style={{ padding: '12px 10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: log.exitoso ? 'var(--success)' : 'var(--error)' }}>
-                      {log.exitoso ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                      {log.exitoso ? 'Exitoso' : 'Denegado'}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 10px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{log.id_usuario}</td>
-                </tr>
-              ))}
+              {filteredLogs.map(log => {
+                const emp = log.perfiles?.empleados;
+                const userName = emp ? `${emp.primer_nombre} ${emp.primer_apellido}` : 'Sistema / Desconocido';
+                
+                return (
+                  <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem' }}>
+                    <td style={{ padding: '12px 10px' }}>{new Date(log.fecha_ingreso).toLocaleString()}</td>
+                    <td style={{ padding: '12px 10px', fontWeight: 600 }}>{userName}</td>
+                    <td style={{ padding: '12px 10px', color: 'var(--accent-primary)', fontFamily: 'monospace' }}>{log.ip_acceso || 'Desconocida'}</td>
+                    <td style={{ padding: '12px 10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: log.exitoso ? 'var(--success)' : 'var(--error)' }}>
+                        {log.exitoso ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                        {log.exitoso ? 'Exitoso' : 'Denegado'}
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 10px', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{log.id_usuario}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

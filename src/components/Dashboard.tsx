@@ -289,49 +289,66 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
     }
   }, [activeTab, refreshKey]);
 
-  const SidebarItem = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
-    <a 
-      href={`#${id}`}
-      onClick={(e) => {
-        // If normal click (not Ctrl, Cmd, Shift, or Alt), handle in app
-        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-          e.preventDefault();
-          setActiveTab(id);
-        }
-      }}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '12px 20px',
-        cursor: 'pointer',
-        borderRadius: '12px',
-        color: activeTab === id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-        backgroundColor: activeTab === id ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        marginBottom: '4px',
-        position: 'relative',
-        overflow: 'hidden',
-        textDecoration: 'none'
-      }}
-      className={activeTab === id ? 'active-sidebar-item' : 'sidebar-item'}
-    >
-      <Icon size={18} style={{ 
-        filter: activeTab === id ? 'drop-shadow(0 0 8px rgba(0, 212, 255, 0.5))' : 'none',
-        transition: 'all 0.3s'
-      }} />
-      <span style={{ fontWeight: activeTab === id ? 700 : 500, fontSize: '0.9rem' }}>{label}</span>
-      {activeTab === id && (
-        <div style={{ 
-          position: 'absolute', 
-          right: 0, top: '20%', bottom: '20%', width: '3px', 
-          backgroundColor: 'var(--accent-primary)',
-          borderRadius: '3px 0 0 3px',
-          boxShadow: '0 0 10px var(--accent-primary)'
+  const SidebarItem = ({ id, icon: Icon, label, subKey }: { id: any, icon: any, label: string, subKey?: string }) => {
+    const subLabel = subKey ? t(subKey) : null;
+    return (
+      <a 
+        href={`#${id}`}
+        onClick={(e) => {
+          if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+            e.preventDefault();
+            setActiveTab(id);
+          }
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: subLabel ? '10px 20px' : '12px 20px',
+          cursor: 'pointer',
+          borderRadius: '12px',
+          color: activeTab === id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+          backgroundColor: activeTab === id ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          marginBottom: '4px',
+          position: 'relative',
+          overflow: 'hidden',
+          textDecoration: 'none'
+        }}
+        className={activeTab === id ? 'active-sidebar-item' : 'sidebar-item'}
+      >
+        <Icon size={18} style={{ 
+          filter: activeTab === id ? 'drop-shadow(0 0 8px rgba(0, 212, 255, 0.5))' : 'none',
+          transition: 'all 0.3s'
         }} />
-      )}
-    </a>
-  );
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span style={{ 
+            fontWeight: activeTab === id ? 700 : 500, 
+            fontSize: '0.9rem',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {label}
+          </span>
+          {subLabel && (
+            <span className="sub-index" style={{ fontSize: '0.65rem', marginTop: '-2px' }}>
+              {subLabel}
+            </span>
+          )}
+        </div>
+        {activeTab === id && (
+          <div style={{ 
+            position: 'absolute', 
+            right: 0, top: '20%', bottom: '20%', width: '3px', 
+            backgroundColor: 'var(--accent-primary)',
+            borderRadius: '3px 0 0 3px',
+            boxShadow: '0 0 10px var(--accent-primary)'
+          }} />
+        )}
+      </a>
+    );
+  };
 
   const triggerRefresh = () => setRefreshKey(prev => prev + 1);
   const handleEdit = (item: any) => {
@@ -473,33 +490,33 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             {t('operaciones_centrales')}
           </div>
           <SidebarItem id="summary" icon={LayoutDashboard} label={t('panel_general')} />
-          {hasPermission('empleados') && <SidebarItem id="employees" icon={Users} label={t('gestion_talento')} />}
-          {hasPermission('cargos') && <SidebarItem id="jobs" icon={Briefcase} label={t('cargos')} />}
-          {hasPermission('costos') && <SidebarItem id="costs" icon={DollarSign} label={t('centros_costo')} />}
-          {hasPermission('grupos') && <SidebarItem id="groups" icon={Layers} label={t('grupos_trabajo')} />}
+          {hasPermission('empleados') && <SidebarItem id="employees" icon={Users} label={t('gestion_talento')} subKey="gestion_talento_sub" />}
+          {hasPermission('cargos') && <SidebarItem id="jobs" icon={Briefcase} label={t('cargos')} subKey="cargos_sub" />}
+          {hasPermission('costos') && <SidebarItem id="costs" icon={DollarSign} label={t('centros_costo')} subKey="centros_costo_sub" />}
+          {hasPermission('grupos') && <SidebarItem id="groups" icon={Layers} label={t('grupos_trabajo')} subKey="grupos_trabajo_sub" />}
           
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {t('seguimiento_operativo')}
           </div>
-          {hasPermission('programacion') && <SidebarItem id="schedule" icon={Calendar} label={t('programacion_diaria')} />}
-          {hasPermission('turnos') && <SidebarItem id="shifts" icon={Clock} label={t('jornadas_laborales')} />}
-          {hasPermission('festivos') && <SidebarItem id="holidays" icon={Palmtree} label={t('dias_festivos')} />}
-          {hasPermission('tareas') && <SidebarItem id="tasks" icon={ClipboardList} label={t('grupos_tareas')} />}
-          {hasPermission('det_tareas') && <SidebarItem id="task-details" icon={ListTodo} label={t('subtareas')} />}
-          {hasPermission('novedades') && <SidebarItem id="novedades" icon={Activity} label={t('gestion_novedades')} />}
+          {hasPermission('programacion') && <SidebarItem id="schedule" icon={Calendar} label={t('programacion_diaria')} subKey="programacion_diaria_sub" />}
+          {hasPermission('turnos') && <SidebarItem id="shifts" icon={Clock} label={t('jornadas_laborales')} subKey="jornadas_laborales_sub" />}
+          {hasPermission('festivos') && <SidebarItem id="holidays" icon={Palmtree} label={t('dias_festivos')} subKey="dias_festivos_sub" />}
+          {hasPermission('tareas') && <SidebarItem id="tasks" icon={ClipboardList} label={t('grupos_tareas')} subKey="grupos_tareas_sub" />}
+          {hasPermission('det_tareas') && <SidebarItem id="task-details" icon={ListTodo} label={t('subtareas')} subKey="subtareas_sub" />}
+          {hasPermission('novedades') && <SidebarItem id="novedades" icon={Activity} label={t('novedades')} subKey="novedades_sub" />}
 
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {t('trabajo_diario')}
           </div>
-          <SidebarItem id="activity-log" icon={CheckSquare} label={t('registro_actividades')} />
-          <SidebarItem id="activity-calendar" icon={Calendar} label={t('calendario_trabajo')} />
+          <SidebarItem id="activity-log" icon={CheckSquare} label={t('registro_actividades')} subKey="registro_actividades_sub" />
+          <SidebarItem id="activity-calendar" icon={Calendar} label={t('calendario_trabajo')} subKey="calendario_trabajo_sub" />
 
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {t('sistemas_auditoria')}
           </div>
-          {hasPermission('usuarios') && <SidebarItem id="users" icon={User} label={t('usuarios_perfiles')} />}
-          {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label={t('seguridad_roles')} />}
-          {hasPermission('logs') && <SidebarItem id="logs" icon={History} label={t('auditoria_acceso')} />}
+          {hasPermission('usuarios') && <SidebarItem id="users" icon={User} label={t('usuarios_perfiles')} subKey="usuarios_perfiles_sub" />}
+          {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label={t('roles_permisos')} subKey="roles_permisos_sub" />}
+          {hasPermission('logs') && <SidebarItem id="logs" icon={History} label={t('auditoria_logs')} subKey="auditoria_logs_sub" />}
           {hasPermission('reportes') && <SidebarItem id="summary" icon={FileText} label={t('reportes_maestros')} />}
         </nav>
 
@@ -599,19 +616,40 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             )}
             <div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
-              {activeTab === 'summary' && t('panel_ejecutivo')}
-              {activeTab === 'employees' && t('gestion_personal')}
-              {activeTab === 'costs' && t('control_presupuesto')}
-              {activeTab === 'schedule' && t('planeacion_actividades')}
-              {activeTab === 'roles' && t('seguridad_sistemica')}
-              {activeTab === 'users' && t('gestion_identidades')}
-              {activeTab === 'logs' && t('auditoria_operaciones')}
-              {activeTab === 'shifts' && t('gestion_horarios')}
-              {activeTab === 'activity-log' && t('mis_actividades')}
-              {activeTab === 'activity-calendar' && t('calendario_actividades')}
+              {activeTab === 'summary' && t('panel_general')}
+              {activeTab === 'employees' && t('gestion_talento')}
+              {activeTab === 'costs' && t('centros_costo')}
+              {activeTab === 'schedule' && t('programacion_diaria')}
+              {activeTab === 'roles' && t('roles_permisos')}
+              {activeTab === 'users' && t('usuarios_perfiles')}
+              {activeTab === 'logs' && t('auditoria_logs')}
+              {activeTab === 'shifts' && t('jornadas_laborales')}
+              {activeTab === 'activity-log' && t('registro_actividades')}
+              {activeTab === 'activity-calendar' && t('calendario_trabajo')}
+              {activeTab === 'jobs' && t('cargos')}
+              {activeTab === 'groups' && t('grupos_trabajo')}
+              {activeTab === 'holidays' && t('dias_festivos')}
+              {activeTab === 'tasks' && t('grupos_tareas')}
+              {activeTab === 'task-details' && t('subtareas')}
+              {activeTab === 'novedades' && t('novedades')}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '6px', fontSize: isMobile ? '0.8rem' : '1rem' }}>
-              {t('inteligencia_operativa')}
+            <p className="sub-index" style={{ marginTop: '6px', fontSize: isMobile ? '0.8rem' : '1.1rem' }}>
+              {activeTab === 'summary' && t('informacion_personal')}
+              {activeTab === 'employees' && t('gestion_talento_sub')}
+              {activeTab === 'costs' && t('centros_costo_sub')}
+              {activeTab === 'schedule' && t('programacion_diaria_sub')}
+              {activeTab === 'roles' && t('roles_permisos_sub')}
+              {activeTab === 'users' && t('usuarios_perfiles_sub')}
+              {activeTab === 'logs' && t('auditoria_logs_sub')}
+              {activeTab === 'shifts' && t('jornadas_laborales_sub')}
+              {activeTab === 'activity-log' && t('registro_actividades_sub')}
+              {activeTab === 'activity-calendar' && t('calendario_trabajo_sub')}
+              {activeTab === 'jobs' && t('cargos_sub')}
+              {activeTab === 'groups' && t('grupos_trabajo_sub')}
+              {activeTab === 'holidays' && t('dias_festivos_sub')}
+              {activeTab === 'tasks' && t('grupos_tareas_sub')}
+              {activeTab === 'task-details' && t('subtareas_sub')}
+              {activeTab === 'novedades' && t('novedades_sub')}
             </p>
           </div>
         </div>
@@ -1137,6 +1175,16 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         @keyframes scaleIn {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
+        }
+        .sub-index {
+          color: #00D4FF;
+          text-shadow: 
+            -1px -1px 0 #000,  
+             1px -1px 0 #000,
+            -1px  1px 0 #000,
+             1px  1px 0 #000;
+          font-weight: 800;
+          letter-spacing: 0.5px;
         }
       `}</style>
     </div>
