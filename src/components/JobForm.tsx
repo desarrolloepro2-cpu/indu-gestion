@@ -27,7 +27,7 @@ const JobForm: React.FC<JobFormProps> = ({ onClose, onRefresh, initialData }) =>
         sigla_cargo: initialData.sigla_cargo || '',
         descripcion_cargo: initialData.descripcion_cargo || '',
         salario_cargo: initialData.salario_cargo?.toString() || '',
-        aprobado: initialData.aprobado !== undefined ? initialData.aprobado : true
+        aprobado: true // Always true for new or existing when editing to ensure it remains enabled
       });
     }
   }, [initialData]);
@@ -42,7 +42,8 @@ const JobForm: React.FC<JobFormProps> = ({ onClose, onRefresh, initialData }) =>
 
     const payload = {
       ...formData,
-      salario_cargo: numericSalario
+      salario_cargo: numericSalario,
+      aprobado: true // Ensure it's active
     };
 
     let result;
@@ -126,17 +127,6 @@ const JobForm: React.FC<JobFormProps> = ({ onClose, onRefresh, initialData }) =>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '30px' }}>
-          <input 
-            type="checkbox" 
-            name="aprobado" 
-            id="cargo-aprobado"
-            checked={formData.aprobado} 
-            onChange={handleChange} 
-            style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }} 
-          />
-          <label htmlFor="cargo-aprobado" className="input-label" style={{ marginBottom: 0 }}>Cargo Habilitado</label>
-        </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button type="submit" className="neon-btn" style={{ flex: 1 }} disabled={loading}>

@@ -96,6 +96,9 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [permissions, setPermissions] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Stats State
   const [stats, setStats] = useState({
@@ -148,6 +151,58 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Notifications Effect
+  useEffect(() => {
+    if (currentUser?.id) {
+      const fetchInitialNotifications = async () => {
+        const { data } = await supabase
+          .from('programacion')
+          .select(`
+            id,
+            serial,
+            created_at,
+            id_tarea (nombre)
+          `)
+          .eq('id_responsable', currentUser.id)
+          .order('created_at', { ascending: false })
+          .limit(6);
+        
+        if (data) setNotifications(data);
+      };
+
+      fetchInitialNotifications();
+
+      const channel = supabase
+        .channel('new_programacion')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'programacion',
+          filter: `id_responsable=eq.${currentUser.id}`
+        }, async (payload) => {
+          // Fetch task name for the new record
+          const { data: taskData } = await supabase
+            .from('tareas')
+            .select('nombre')
+            .eq('id', payload.new.id_tarea)
+            .single();
+
+          const newNotif = {
+            ...payload.new,
+            id_tarea: taskData
+          };
+          
+          setNotifications(prev => [newNotif, ...prev].slice(0, 6));
+          setUnreadCount(prev => prev + 1);
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [currentUser]);
 
   // Fetch Stats Effect
   useEffect(() => {
@@ -540,9 +595,106 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             <button className="glass-card" style={{ padding: '12px', cursor: 'pointer', border: 'none' }} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
               {theme === 'dark' ? <Sun size={20} color="var(--accent-primary)" /> : <Moon size={20} color="var(--accent-primary)" />}
             </button>
-            <button className="glass-card" style={{ padding: '12px', cursor: 'pointer', border: 'none' }}>
-              <Bell size={20} color="var(--text-secondary)" />
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button 
+                className="glass-card" 
+                style={{ 
+                  padding: '12px', 
+                  cursor: 'pointer', 
+                  border: showNotifications ? '1px solid var(--accent-primary)' : 'none',
+                  position: 'relative',
+                  backgroundColor: showNotifications ? 'rgba(0, 212, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)'
+                }} 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setUnreadCount(0);
+                }}
+              >
+                <Bell size={20} color={unreadCount > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)'} />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: 'var(--error)',
+                    borderRadius: '50%',
+                    border: '2px solid var(--bg-color)',
+                    boxShadow: '0 0 5px var(--error)'
+                  }} />
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="glass-card animate-scale-in" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '15px',
+                  width: '320px',
+                  zIndex: 1001,
+                  padding: '20px',
+                  border: '1px solid var(--accent-primary)',
+                  boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
+                  backgroundColor: 'rgba(15, 15, 25, 0.98)',
+                  backdropFilter: 'blur(20px)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      {t('notificaciones')}
+                    </h4>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 700 }}>{notifications.length} {t('recientes')}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {t('no_hay_notificaciones')}
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} style={{
+                          padding: '12px',
+                          borderRadius: '10px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          borderLeft: '3px solid var(--accent-primary)',
+                          cursor: 'pointer'
+                        }} onClick={() => { setShowNotifications(false); window.location.hash = '#schedule'; }}>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 800, marginBottom: '2px' }}>{n.serial}</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                            {n.id_tarea?.nombre || t('nueva_actividad')}
+                          </div>
+                          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                            {new Date(n.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {notifications.length > 0 && (
+                    <button 
+                      onClick={() => { setShowNotifications(false); window.location.hash = '#schedule'; }}
+                      style={{ 
+                        width: '100%', 
+                        marginTop: '15px', 
+                        padding: '10px', 
+                        background: 'transparent', 
+                        border: '1px dashed rgba(255,255,255,0.1)', 
+                        color: 'var(--text-secondary)',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        borderRadius: '8px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {t('ver_toda_la_programacion')}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Profile Avatar Top Right */}
             <div 

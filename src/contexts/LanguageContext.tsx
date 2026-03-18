@@ -66,7 +66,12 @@ const translations: Record<Language, Record<string, string>> = {
     'apellido': 'Apellido',
     'cargo': 'Cargo',
     'estado': 'Estado',
-    'acciones': 'Acciones'
+    'acciones': 'Acciones',
+    'notificaciones': 'Notificaciones',
+    'recientes': 'recientes',
+    'no_hay_notificaciones': 'No hay notificaciones nuevas',
+    'nueva_actividad': 'Nueva actividad asignada',
+    'ver_toda_la_programacion': 'Ver toda la programación'
   },
   en: {
     // Dashboard / Sidebar
@@ -164,7 +169,12 @@ const translations: Record<Language, Record<string, string>> = {
     'apellido': 'Last Name',
     'cargo': 'Position',
     'estado': 'Status',
-    'acciones': 'Actions'
+    'acciones': 'Actions',
+    'notificaciones': 'Notifications',
+    'recientes': 'recent',
+    'no_hay_notificaciones': 'No new notifications',
+    'nueva_actividad': 'New activity assigned',
+    'ver_toda_la_programacion': 'View all scheduling'
   }
 };
 
