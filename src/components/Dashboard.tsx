@@ -1177,14 +1177,11 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           to { opacity: 1; transform: scale(1); }
         }
         .sub-index {
-          color: #00D4FF;
-          text-shadow: 
-            -1px -1px 0 #000,  
-             1px -1px 0 #000,
-            -1px  1px 0 #000,
-             1px  1px 0 #000;
+          color: var(--text-secondary);
           font-weight: 800;
-          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          opacity: 0.8;
         }
       `}</style>
     </div>
