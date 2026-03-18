@@ -12,6 +12,7 @@ interface ActivityLogListProps {
 const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, searchTerm, currentUser }) => {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUser?.id && currentUser.id !== 'undefined' && currentUser.id !== '[object Object]') {
@@ -46,13 +47,13 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
     setLoading(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm('¿Está seguro de eliminar este registro?')) {
-      const { error } = await supabase.from('registro_actividades').delete().eq('id', id);
-      if (!error) fetchLogs();
-      else alert('Error al eliminar: ' + error.message);
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('registro_actividades').delete().eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchLogs();
+    } else {
+      alert('Error al eliminar: ' + error.message);
     }
   };
 
@@ -208,27 +209,72 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                 </div>
 
                 {/* Botones de acción */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button 
-                    onClick={() => onEdit(log)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  {['administrador', 'superadmin', 'supervisor'].includes((currentUser?.role_name || '').toLowerCase()) && (
+                  <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
                     <button 
-                      type="button"
-                      onClick={(e) => handleDelete(e, log.id)}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', opacity: 0.8, transition: 'opacity 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}
+                      onClick={() => onEdit(log)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
                     >
-                      <Trash2 size={18} />
+                      <Edit2 size={18} />
                     </button>
-                  )}
-                </div>
+                    {['administrador', 'superadmin', 'supervisor'].includes((currentUser?.role_name || '').toLowerCase()) && (
+                      <>
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setConfirmingId(confirmingId === log.id ? null : log.id);
+                          }}
+                          style={{ 
+                            background: confirmingId === log.id ? 'var(--error)' : 'transparent', 
+                            border: 'none', 
+                            color: confirmingId === log.id ? 'white' : 'var(--error)', 
+                            cursor: 'pointer', 
+                            padding: confirmingId === log.id ? '4px' : '0px',
+                            borderRadius: '6px',
+                            opacity: 0.8, 
+                            transition: 'all 0.2s' 
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        {confirmingId === log.id && (
+                          <div className="glass-card animate-scale-in" style={{ 
+                            position: 'absolute', 
+                            right: 0, 
+                            top: '100%', 
+                            marginTop: '10px',
+                            zIndex: 100, 
+                            padding: '12px', 
+                            minWidth: '180px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                            border: '1px solid var(--accent-primary)',
+                            backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                          }}>
+                            <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600, color: 'white' }}>¿Realmente quieres eliminar este registro?</p>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => setConfirmingId(null)}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                              >
+                                No
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(log.id)}
+                                style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
 
               </div>
             ))}

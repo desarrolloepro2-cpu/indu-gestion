@@ -13,6 +13,7 @@ interface EmployeeListProps {
 const EmployeeList: React.FC<EmployeeListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -37,15 +38,14 @@ const EmployeeList: React.FC<EmployeeListProps> = ({ onEdit, refreshKey, searchT
     setLoading(false);
   };
 
-  const handleToggleStatus = async (e: React.MouseEvent, id: string, currentStatus: boolean) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const action = currentStatus ? 'deshabilitar' : 'habilitar';
-    if (window.confirm(`¿Quieres realmente ${action} el registro?`)) {
-      const { error } = await supabase.from('empleados').update({ esta_activo: !currentStatus }).eq('id', id);
-      if (!error) fetchEmployees();
-      else alert(`Error al ${action}: ` + error.message);
+    const { error } = await supabase.from('empleados').update({ esta_activo: !currentStatus }).eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchEmployees();
+    } else {
+      alert(`Error al ${action}: ` + error.message);
     }
   };
 
@@ -127,16 +127,52 @@ const EmployeeList: React.FC<EmployeeListProps> = ({ onEdit, refreshKey, searchT
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: emp.esta_activo ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                     {emp.primer_nombre} {emp.primer_apellido}
                   </h3>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                    {confirmingId === emp.id ? (
+                      <div className="glass-card animate-scale-in" style={{ 
+                        position: 'absolute', 
+                        right: 0, 
+                        top: '100%', 
+                        marginTop: '10px',
+                        zIndex: 100, 
+                        padding: '12px', 
+                        minWidth: '180px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                        border: '1px solid var(--accent-primary)',
+                        backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                      }}>
+                        <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600 }}>¿Realmente quieres {emp.esta_activo ? 'desactivar' : 'activar'}?</p>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button 
+                            onClick={() => setConfirmingId(null)}
+                            style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                          >
+                            No
+                          </button>
+                          <button 
+                            onClick={() => handleToggleStatus(emp.id, emp.esta_activo)}
+                            style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                          >
+                            Sí
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                     {canEdit && emp.esta_activo && <button onClick={() => onEdit(emp)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><Edit2 size={16} /></button>}
                     {canDelete && (
                       <button 
-                        onClick={(e) => handleToggleStatus(e, emp.id, emp.esta_activo)} 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setConfirmingId(confirmingId === emp.id ? null : emp.id);
+                        }} 
                         style={{ 
-                          background: 'transparent', 
+                          background: confirmingId === emp.id ? 'var(--accent-primary)' : 'transparent', 
                           border: 'none', 
-                          color: emp.esta_activo ? '#00d4ff' : 'var(--text-secondary)', 
+                          color: confirmingId === emp.id ? 'white' : (emp.esta_activo ? '#00d4ff' : 'var(--text-secondary)'), 
                           cursor: 'pointer',
+                          padding: confirmingId === emp.id ? '4px' : '0px',
+                          borderRadius: '6px',
                           filter: emp.esta_activo ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
                           transition: 'all 0.3s ease'
                         }}

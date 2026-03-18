@@ -438,7 +438,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             </div>
           </div>
           <button 
-            onClick={() => supabase.auth.signOut()}
+            onClick={() => {
+              window.location.hash = '';
+              supabase.auth.signOut();
+            }}
             style={{ 
               width: '100%', 
               marginTop: '15px', 

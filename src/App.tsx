@@ -29,10 +29,25 @@ function MainApp() {
         checkProfile(session.user.id);
       } else {
         setRequirePasswordChange(false);
+        // Clear hash on logout to ensure clean state
+        if (window.location.hash) {
+          window.location.hash = '';
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Multi-tab logout sync
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.includes('supabase.auth.token') || e.key === 'dashboardTab') {
+        checkSessionAndProfile();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const checkSessionAndProfile = async () => {

@@ -13,6 +13,7 @@ const TaskDetailList: React.FC<TaskDetailListProps> = ({ onEdit, refreshKey, sea
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -46,12 +47,11 @@ const TaskDetailList: React.FC<TaskDetailListProps> = ({ onEdit, refreshKey, sea
     setLoading(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm('¿Está seguro de eliminar esta subtarea técnica?')) {
-      const { error } = await supabase.from('det_tareas').delete().eq('id', id);
-      if (!error) fetchItems();
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('det_tareas').delete().eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchItems();
     }
   };
 
@@ -122,7 +122,37 @@ const TaskDetailList: React.FC<TaskDetailListProps> = ({ onEdit, refreshKey, sea
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                {confirmingId === item.id ? (
+                  <div className="glass-card animate-scale-in" style={{ 
+                    position: 'absolute', 
+                    right: 0, 
+                    top: '100%', 
+                    marginTop: '10px',
+                    zIndex: 100, 
+                    padding: '12px', 
+                    minWidth: '180px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    border: '1px solid var(--accent-primary)',
+                    backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                  }}>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600 }}>¿Realmente quieres eliminar esta subtarea?</p>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => setConfirmingId(null)}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        No
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <button 
                   onClick={() => onEdit(item)}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
@@ -132,8 +162,22 @@ const TaskDetailList: React.FC<TaskDetailListProps> = ({ onEdit, refreshKey, sea
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => handleDelete(e, item.id)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setConfirmingId(confirmingId === item.id ? null : item.id);
+                  }}
+                  style={{ 
+                    background: confirmingId === item.id ? 'var(--error)' : 'transparent', 
+                    border: 'none', 
+                    color: confirmingId === item.id ? 'white' : 'var(--error)', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    padding: confirmingId === item.id ? '4px' : '0px',
+                    borderRadius: '6px',
+                    gap: '5px' 
+                  }}
                 >
                   <Trash2 size={16} />
                 </button>

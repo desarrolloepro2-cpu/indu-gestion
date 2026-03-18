@@ -11,6 +11,7 @@ interface JobListProps {
 const JobList: React.FC<JobListProps> = ({ onEdit, refreshKey, searchTerm }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchItems();
@@ -28,15 +29,14 @@ const JobList: React.FC<JobListProps> = ({ onEdit, refreshKey, searchTerm }) => 
     setLoading(false);
   };
 
-  const handleToggleStatus = async (e: React.MouseEvent, id: string, currentStatus: boolean) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const action = currentStatus ? 'deshabilitar' : 'habilitar';
-    if (window.confirm(`¿Quieres realmente ${action} el registro?`)) {
-      const { error } = await supabase.from('cargos').update({ habilitado: !currentStatus }).eq('id', id);
-      if (!error) fetchItems();
-      else alert(`Error al ${action}: ` + error.message);
+    const { error } = await supabase.from('cargos').update({ habilitado: !currentStatus }).eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchItems();
+    } else {
+      alert(`Error al ${action}: ` + error.message);
     }
   };
 
@@ -90,7 +90,37 @@ const JobList: React.FC<JobListProps> = ({ onEdit, refreshKey, searchTerm }) => 
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                {confirmingId === item.id ? (
+                  <div className="glass-card animate-scale-in" style={{ 
+                    position: 'absolute', 
+                    right: 0, 
+                    top: '100%', 
+                    marginTop: '10px',
+                    zIndex: 100, 
+                    padding: '12px', 
+                    minWidth: '180px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    border: '1px solid var(--accent-primary)',
+                    backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                  }}>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600 }}>¿Realmente quieres {item.habilitado ? 'desactivar' : 'activar'}?</p>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => setConfirmingId(null)}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        No
+                      </button>
+                      <button 
+                        onClick={() => handleToggleStatus(item.id, item.habilitado)}
+                        style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                      >
+                        Sí
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 {item.habilitado && (
                   <button 
                     onClick={() => onEdit(item)}
@@ -102,14 +132,20 @@ const JobList: React.FC<JobListProps> = ({ onEdit, refreshKey, searchTerm }) => 
                 )}
                 <button 
                   type="button"
-                  onClick={(e) => handleToggleStatus(e, item.id, item.habilitado)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setConfirmingId(confirmingId === item.id ? null : item.id);
+                  }}
                   style={{ 
-                    background: 'transparent', 
+                    background: confirmingId === item.id ? 'var(--accent-primary)' : 'transparent', 
                     border: 'none', 
-                    color: item.habilitado ? '#00d4ff' : 'var(--text-secondary)', 
+                    color: confirmingId === item.id ? 'white' : (item.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center',
+                    padding: confirmingId === item.id ? '4px' : '0px',
+                    borderRadius: '6px',
                     filter: item.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
                     transition: 'all 0.3s ease'
                   }}

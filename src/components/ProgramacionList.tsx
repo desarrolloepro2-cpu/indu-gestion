@@ -13,6 +13,7 @@ interface ProgramacionListProps {
 const ProgramacionList: React.FC<ProgramacionListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchItems();
@@ -37,13 +38,13 @@ const ProgramacionList: React.FC<ProgramacionListProps> = ({ onEdit, refreshKey,
     setLoading(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm('¿Está seguro de eliminar esta programación?')) {
-      const { error } = await supabase.from('programacion').delete().eq('id', id);
-      if (!error) fetchItems();
-      else alert('Error al eliminar: ' + error.message);
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('programacion').delete().eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchItems();
+    } else {
+      alert('Error al eliminar: ' + error.message);
     }
   };
 
@@ -97,14 +98,58 @@ const ProgramacionList: React.FC<ProgramacionListProps> = ({ onEdit, refreshKey,
                 </h3>
               </div>
               
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                {confirmingId === item.id ? (
+                  <div className="glass-card animate-scale-in" style={{ 
+                    position: 'absolute', 
+                    right: 0, 
+                    top: '100%', 
+                    marginTop: '10px',
+                    zIndex: 100, 
+                    padding: '12px', 
+                    minWidth: '180px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    border: '1px solid var(--accent-primary)',
+                    backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                  }}>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600 }}>¿Realmente quieres eliminar este registro?</p>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => setConfirmingId(null)}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        No
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        style={{ background: 'var(--error)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 {canEdit && (
                   <button onClick={() => onEdit(item)} className="glass-card" style={{ padding: '8px', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer' }}>
                     <Edit2 size={18} />
                   </button>
                 )}
                 {canDelete && (
-                  <button onClick={(e) => handleDelete(e, item.id)} className="glass-card" style={{ padding: '8px', border: 'none', color: 'rgba(239, 68, 68, 0.5)', cursor: 'pointer' }}>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmingId(confirmingId === item.id ? null : item.id);
+                    }} 
+                    className="glass-card" 
+                    style={{ 
+                      padding: '8px', 
+                      border: 'none', 
+                      color: confirmingId === item.id ? 'white' : 'rgba(239, 68, 68, 0.5)', 
+                      background: confirmingId === item.id ? 'var(--error)' : 'rgba(255,255,255,0.02)',
+                      cursor: 'pointer' 
+                    }}
+                  >
                     <Trash2 size={18} />
                   </button>
                 )}

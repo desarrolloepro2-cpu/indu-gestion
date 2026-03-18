@@ -11,6 +11,7 @@ interface ShiftListProps {
 const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm }) => {
   const [shifts, setShifts] = useState<any[]>([]);
   const [, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchShifts();
@@ -30,15 +31,14 @@ const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm })
     setLoading(false);
   };
 
-  const handleToggleStatus = async (e: React.MouseEvent, id: string, currentStatus: boolean) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const action = currentStatus ? 'deshabilitar' : 'habilitar';
-    if (window.confirm(`¿Quieres realmente ${action} el registro?`)) {
-      const { error } = await supabase.from('turnos').update({ habilitado: !currentStatus }).eq('id', id);
-      if (!error) fetchShifts();
-      else alert(`Error al ${action}: ` + error.message);
+    const { error } = await supabase.from('turnos').update({ habilitado: !currentStatus }).eq('id', id);
+    if (!error) {
+      setConfirmingId(null);
+      fetchShifts();
+    } else {
+      alert(`Error al ${action}: ` + error.message);
     }
   };
 
@@ -147,7 +147,37 @@ const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm })
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+              {confirmingId === shift.id ? (
+                <div className="glass-card animate-scale-in" style={{ 
+                  position: 'absolute', 
+                  right: 0, 
+                  top: '100%', 
+                  marginTop: '10px',
+                  zIndex: 100, 
+                  padding: '12px', 
+                  minWidth: '180px',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  border: '1px solid var(--accent-primary)',
+                  backgroundColor: 'rgba(15, 15, 25, 0.95)'
+                }}>
+                  <p style={{ fontSize: '0.8rem', marginBottom: '12px', fontWeight: 600 }}>¿Realmente quieres {shift.habilitado ? 'desactivar' : 'activar'}?</p>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={() => setConfirmingId(null)}
+                      style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      No
+                    </button>
+                    <button 
+                      onClick={() => handleToggleStatus(shift.id, shift.habilitado)}
+                      style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                    >
+                      Sí
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               {shift.habilitado && (
                 <button 
                   onClick={() => onEdit(shift)}
@@ -168,11 +198,15 @@ const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm })
               )}
               <button 
                 type="button"
-                onClick={(e) => handleToggleStatus(e, shift.id, shift.habilitado)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setConfirmingId(confirmingId === shift.id ? null : shift.id);
+                }}
                 style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)', 
+                  background: confirmingId === shift.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.05)', 
                   border: 'none', 
-                  color: shift.habilitado ? '#00d4ff' : 'var(--text-secondary)', 
+                  color: confirmingId === shift.id ? 'white' : (shift.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
                   cursor: 'pointer',
                   padding: '8px',
                   borderRadius: '8px',
