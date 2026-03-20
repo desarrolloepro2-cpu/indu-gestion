@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Hash, CheckCircle, XCircle, Edit2, Power } from 'lucide-react';
+import { CheckCircle, XCircle, Edit2, Power } from 'lucide-react';
+import { DynamicIcon } from './DynamicIcon';
 
 interface CostCenterListProps {
   onEdit: (cc: any) => void;
@@ -77,7 +78,7 @@ const CostCenterList: React.FC<CostCenterListProps> = ({ onEdit, refreshKey, sea
                 borderRadius: '8px',
                 color: 'var(--accent-primary)'
               }}>
-                <Hash size={24} />
+                <DynamicIcon name={item.icono_nombre || 'Database'} size={24} />
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

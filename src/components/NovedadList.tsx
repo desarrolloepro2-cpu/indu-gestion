@@ -6,9 +6,11 @@ interface NovedadListProps {
   onEdit: (novedad: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const NovedadList: React.FC<NovedadListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const NovedadList: React.FC<NovedadListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -96,34 +98,38 @@ const NovedadList: React.FC<NovedadListProps> = ({ onEdit, refreshKey, searchTer
                     </div>
                   </div>
                 ) : null}
-                <button 
-                  onClick={() => onEdit(item)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-                >
-                  <Edit2 size={16} />
-                  <span style={{ fontSize: '0.8rem' }}>Editar</span>
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setConfirmingId(confirmingId === item.id ? null : item.id);
-                  }}
-                  style={{ 
-                    background: confirmingId === item.id ? 'var(--error)' : 'transparent', 
-                    border: 'none', 
-                    color: confirmingId === item.id ? 'white' : 'var(--error)', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    padding: confirmingId === item.id ? '4px' : '0px',
-                    borderRadius: '6px',
-                    gap: '5px' 
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                {canEdit && (
+                  <button 
+                    onClick={() => onEdit(item)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                  >
+                    <Edit2 size={16} />
+                    <span style={{ fontSize: '0.8rem' }}>Editar</span>
+                  </button>
+                )}
+                {canDelete && (
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmingId(confirmingId === item.id ? null : item.id);
+                    }}
+                    style={{ 
+                      background: confirmingId === item.id ? 'var(--error)' : 'transparent', 
+                      border: 'none', 
+                      color: confirmingId === item.id ? 'white' : 'var(--error)', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      padding: confirmingId === item.id ? '4px' : '0px',
+                      borderRadius: '6px',
+                      gap: '5px' 
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
 

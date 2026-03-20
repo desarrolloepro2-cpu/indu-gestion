@@ -224,6 +224,30 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
   }, [formData.tarea_id, detTareas]);
 
   const fetchOptions = async () => {
+    const roleName = currentUser?.role_name?.toLowerCase() || '';
+    const isAdmin = ['administrador', 'superadmin'].includes(roleName);
+    const isSupervisor = roleName === 'supervisor';
+
+    let progQuery = supabase.from('programacion').select(`
+      id, 
+      serial, 
+      id_centro_costo, 
+      id_tarea, 
+      id_detalle_tarea, 
+      id_turno, 
+      id_supervisor, 
+      id_responsable,
+      tareas ( nombre )
+    `);
+    
+    if (!isAdmin) {
+      if (isSupervisor) {
+        progQuery = progQuery.or(`id_responsable.eq.${currentUser.id},id_supervisor.eq.${currentUser.id}`);
+      } else {
+        progQuery = progQuery.eq('id_responsable', currentUser.id);
+      }
+    }
+
     const [
       { data: cc }, 
       { data: prog }, 
@@ -231,23 +255,22 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
       { data: tur }
     ] = await Promise.all([
       supabase.from('centros_costos').select('id, codigo, nombre_centro').eq('habilitado', true),
-      // Solo mostrar las programaciones donde el currentUser es el responsable ('ejecutor')
-      supabase.from('programacion').select('id, serial, id_centro_costo, id_tarea, id_detalle_tarea, id_turno, id_supervisor').eq('id_responsable', currentUser.id),
+      progQuery,
       supabase.from('tareas').select('id, nombre').eq('habilitado', true),
-      supabase.from('turnos').select('id, nombre_turno, hora_inicio, hora_fin').eq('habilitado', true)
+      supabase.from('turnos').select('*').eq('habilitado', true)
     ]);
     
     setOptions({
       cc: cc ? cc.map(c => ({ id: c.id, label: `${c.codigo} - ${c.nombre_centro}` })) : [],
-      programaciones: prog ? prog.map(p => ({ 
+      programaciones: prog ? prog.map((p: any) => ({ 
         ...p,
         id: p.id, 
-        label: p.serial || p.id.substring(0,8)
+        label: `${p.serial || p.id.substring(0,8)} - ${p.tareas?.nombre || 'Sin tarea'}`
       })) : [],
       tareas: tar ? tar.map(t => ({ id: t.id, label: t.nombre })) : [],
       turnos: tur ? tur.map(t => ({ 
-        id: t.id, 
-        label: `${t.nombre_turno} (${(t.hora_inicio || '').slice(0,5)} - ${(t.hora_fin || '').slice(0,5)})` 
+        ...t,
+        label: `${t.nombre_turno} - Jornada Asignada` 
       })) : []
     });
   };
@@ -276,8 +299,12 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.programacion_id) {
+      alert("Debe seleccionar una Programación de Actividad válida.");
+      return;
+    }
     if (!formData.observacion.trim()) {
-      alert("La observación es obligatoria");
+      alert("La observación es obligatoria.");
       return;
     }
     
@@ -292,7 +319,7 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
     }
 
     const payload: any = {
-      ejecutor_id: user.id,
+      ejecutor_id: log?.ejecutor_id || user.id,
       centro_costo_id: formData.centro_costo_id || null,
       programacion_id: formData.programacion_id || null,
       tarea_id: formData.tarea_id || null,
@@ -303,9 +330,54 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
       observacion: formData.observacion
     };
 
+    // Lógica de auto-aprobación si cumple el horario del turno
+    let autoAprobado = false;
+    if (formData.turno_id && formData.fecha_inicio && formData.fecha_fin) {
+      const turnoSelected = options.turnos.find(t => t.id === formData.turno_id);
+      if (turnoSelected && turnoSelected.lunes !== undefined) {
+        const startD = new Date(formData.fecha_inicio);
+        const endD = new Date(formData.fecha_fin);
+        
+        if (startD.toDateString() === endD.toDateString()) {
+          const dayIndex = startD.getDay();
+          const dayKeys = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
+          const dbDays = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+          
+          const key = dayKeys[dayIndex];
+          const dbDay = dbDays[dayIndex];
+          
+          if (turnoSelected[dbDay]) {
+            const tStartStr = turnoSelected[`h_inicio_${key}`];
+            const dur = turnoSelected[`duracion_${key}`];
+            const alm = turnoSelected[`almuerzo_${key}`];
+            
+            if (tStartStr && typeof dur === 'number') {
+              const [h, m] = tStartStr.split(':').map(Number);
+              const maxH = h + dur + (alm ? 1 : 0);
+              
+              const actStartMin = startD.getHours() * 60 + startD.getMinutes();
+              const actEndMin = endD.getHours() * 60 + endD.getMinutes();
+              
+              const tStartMin = h * 60 + m;
+              const tEndMin = maxH * 60 + m;
+              
+              // Pequeño margen de tolerancia de 5 minutos o estricto
+              if (actStartMin >= (tStartMin - 5) && actEndMin <= (tEndMin + 15)) {
+                autoAprobado = true;
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (canApprove) {
       payload.aprobado = formData.aprobado;
       payload.aprobado_por = formData.aprobado ? (currentUser.perfil_id || currentUser.id) : null;
+    } else {
+      payload.aprobado = autoAprobado;
+      // Mantiene el aprobado_por original si ya estaba, o nulo si es automático
+      payload.aprobado_por = log?.aprobado_por || null;
     }
 
     if (log?.id) {
@@ -313,9 +385,25 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
       if (error) alert('Error al actualizar: ' + error.message);
       else onSave();
     } else {
-      const { error } = await supabase.from('registro_actividades').insert([payload]);
-      if (error) alert('Error al registrar: ' + error.message);
-      else onSave();
+      const { data: newData, error } = await supabase.from('registro_actividades').insert([payload]).select();
+      if (error) {
+        alert('Error al registrar: ' + error.message);
+      } else {
+        // Enviar notificación por correo
+        try {
+          if (newData && newData[0]) {
+            await supabase.functions.invoke('activity-log-notification', {
+              body: { 
+                activity_id: newData[0].id,
+                programacion_id: newData[0].programacion_id
+              }
+            });
+          }
+        } catch (mailErr) {
+          console.error('Error enviando notificación:', mailErr);
+        }
+        onSave();
+      }
     }
     setLoading(false);
   };
@@ -367,11 +455,12 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
         
         <div style={{ gridColumn: 'span 2' }}>
           <SearchableSelect 
-            label="Programación Táctica (Opcional)"
-            options={[{id: '', label: 'Ninguna / Independiente'}, ...options.programaciones]} 
+            label="Programación de Actividad"
+            options={options.programaciones} 
             value={formData.programacion_id} 
             onChange={handleProgramacionChange}
             placeholder="Seleccione la planeación de la actividad"
+            required
           />
         </div>
 

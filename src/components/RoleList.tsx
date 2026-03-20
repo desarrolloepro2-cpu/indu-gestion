@@ -6,9 +6,11 @@ interface RoleListProps {
   onEdit: (role: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const RoleList: React.FC<RoleListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const RoleList: React.FC<RoleListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -106,7 +108,7 @@ const RoleList: React.FC<RoleListProps> = ({ onEdit, refreshKey, searchTerm }) =
                     </div>
                   </div>
                 ) : null}
-                {item.habilitado && (
+                {canEdit && item.habilitado && (
                   <button 
                     onClick={() => onEdit(item)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
@@ -114,7 +116,7 @@ const RoleList: React.FC<RoleListProps> = ({ onEdit, refreshKey, searchTerm }) =
                     <Edit2 size={16} />
                   </button>
                 )}
-                {item.nombre_rol.toLowerCase() !== 'admin' && item.nombre_rol.toLowerCase() !== 'superadmin' && (
+                {canDelete && item.nombre_rol.toLowerCase() !== 'admin' && item.nombre_rol.toLowerCase() !== 'superadmin' && (
                   <button 
                     type="button"
                     onClick={(e) => {

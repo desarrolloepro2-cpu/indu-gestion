@@ -32,7 +32,7 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
         *,
         perfiles:ejecutor_id(empleados(correo_electronico, primer_nombre, primer_apellido)),
         centros_costos(nombre_centro, codigo),
-        programacion(serial),
+        programacion(serial, porcentaje_ejecucion),
         tareas(nombre),
         det_tareas(nombre),
         turnos(nombre_turno)
@@ -125,6 +125,11 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                     <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
                       {log.det_tareas?.nombre || 'Sin detalle'}
                     </span>
+                    {log.programacion && typeof log.programacion.porcentaje_ejecucion !== 'undefined' && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '4px' }}>
+                        AVANCE DE OBRA: <strong style={{ color: log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' }}>{log.programacion.porcentaje_ejecucion}%</strong>
+                      </span>
+                    )}
                   </div>
                   <span style={{ 
                     display: 'flex', 
@@ -287,6 +292,11 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                     <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>
                       {log.det_tareas?.nombre || 'Sin detalle'}
                     </span>
+                    {log.programacion && typeof log.programacion.porcentaje_ejecucion !== 'undefined' && (
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '2px', backgroundColor: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', width: 'fit-content' }}>
+                        AVANCE DE OBRA: <strong style={{ color: log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' }}>{log.programacion.porcentaje_ejecucion}%</strong>
+                      </span>
+                    )}
                   </div>
 
                   {/* Clasificación / Check */}

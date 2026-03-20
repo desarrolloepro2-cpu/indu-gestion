@@ -25,7 +25,11 @@ import {
   Palmtree,
   Globe,
   Menu,
-  X
+  X,
+  Settings,
+  Bot,
+  Upload,
+  Palette
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import EmployeeList from './EmployeeList';
@@ -57,6 +61,10 @@ import ActivityLogList from './ActivityLogList';
 import ActivityLogForm from './ActivityLogForm';
 import ActivityCalendarView from './ActivityCalendarView';
 import PasswordChangeForm from './PasswordChangeForm';
+import SystemConfigForm from './SystemConfigForm';
+import AIAssistantChat from './AIAssistantChat';
+import BulkUpload from './BulkUpload';
+import CustomAppearanceForm from './CustomAppearanceForm';
 
 interface DashboardProps {
   session: any;
@@ -64,9 +72,9 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { language, setLanguage, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar'>(() => {
+  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar' | 'configuracion' | 'bulk-upload' | 'apariencia'>(() => {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar'];
+    const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia'];
     if (hash && validTabs.includes(hash)) return hash as any;
     return (localStorage.getItem('dashboardTab') as any) || 'summary';
   });
@@ -75,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar'];
+      const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts' , 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia'];
       if (hash && validTabs.includes(hash)) {
         setActiveTab(hash as any);
       }
@@ -105,6 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   // Device detection
   useEffect(() => {
@@ -133,8 +142,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
       'task-details': t('subtareas'),
       novedades: t('gestion_novedades'),
       users: t('usuarios_perfiles'),
-      'activity-log': t('registro_actividades'),
-      'activity-calendar': t('calendario_trabajo')
+      'activity-calendar': t('calendario_trabajo'),
+      configuracion: t('configuracion_sistema'),
+      'bulk-upload': t('cargue_masivo'),
+      apariencia: t('personalizacion')
     };
     document.title = `${tabTitles[activeTab] || 'Dashboard'} | InduConocimiento`;
   }, [activeTab, t]);
@@ -360,6 +371,16 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
     setEditingItem(null);
   };
 
+  const [appConfig, setAppConfig] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAppAppearance = async () => {
+      const { data } = await supabase.from('configuracion_apariencia').select('*').eq('id', 1).single();
+      if (data) setAppConfig(data);
+    };
+    fetchAppAppearance();
+  }, [refreshKey]);
+
   const renderForm = () => {
     const props = { onClose: handleCloseForm, onRefresh: triggerRefresh, initialData: editingItem };
     
@@ -461,13 +482,13 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             alignItems: 'center'
           }}>
             <img 
-              src="/logo_indutronica.png" 
+              src={appConfig?.logo_url || "/logo_indutronica.png"} 
               alt="Logo" 
               style={{ 
-                width: '50%', 
-                height: 'auto', 
+                width: '100%', 
+                maxHeight: '40px',
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 0 10px rgba(58, 75, 224, 0.4))'
+                filter: 'drop-shadow(0 0 10px var(--accent-glow))'
               }} 
             />
           </div>
@@ -508,8 +529,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {t('trabajo_diario')}
           </div>
-          <SidebarItem id="activity-log" icon={CheckSquare} label={t('registro_actividades')} subKey="registro_actividades_sub" />
-          <SidebarItem id="activity-calendar" icon={Calendar} label={t('calendario_trabajo')} subKey="calendario_trabajo_sub" />
+          {hasPermission('actividades') && <SidebarItem id="activity-log" icon={CheckSquare} label={t('registro_actividades')} subKey="registro_actividades_sub" />}
+          {hasPermission('actividades') && <SidebarItem id="activity-calendar" icon={Calendar} label={t('calendario_trabajo')} subKey="calendario_trabajo_sub" />}
 
           <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {t('sistemas_auditoria')}
@@ -518,6 +539,13 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label={t('roles_permisos')} subKey="roles_permisos_sub" />}
           {hasPermission('logs') && <SidebarItem id="logs" icon={History} label={t('auditoria_logs')} subKey="auditoria_logs_sub" />}
           {hasPermission('reportes') && <SidebarItem id="summary" icon={FileText} label={t('reportes_maestros')} />}
+          {hasPermission('cargue_masivo') && <SidebarItem id="bulk-upload" icon={Upload} label={t('cargue_masivo')} subKey="cargue_masivo_sub" />}
+          {hasPermission('configuracion') && <SidebarItem id="apariencia" icon={Palette} label={t('personalizacion')} subKey="apariencia_sub" />}
+
+          <div style={{ padding: '30px 10px 10px', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+            {t('configuracion_sistema')}
+          </div>
+          {hasPermission('configuracion') && <SidebarItem id="configuracion" icon={Settings} label={t('configuracion_correo')} subKey="configuracion_correo_sub" />}
         </nav>
 
         {/* User Card */}
@@ -626,12 +654,14 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               {activeTab === 'shifts' && t('jornadas_laborales')}
               {activeTab === 'activity-log' && t('registro_actividades')}
               {activeTab === 'activity-calendar' && t('calendario_trabajo')}
+              {activeTab === 'configuracion' && t('configuracion_sistema')}
               {activeTab === 'jobs' && t('cargos')}
               {activeTab === 'groups' && t('grupos_trabajo')}
               {activeTab === 'holidays' && t('dias_festivos')}
               {activeTab === 'tasks' && t('grupos_tareas')}
               {activeTab === 'task-details' && t('subtareas')}
               {activeTab === 'novedades' && t('novedades')}
+              {activeTab === 'bulk-upload' && t('cargue_masivo')}
             </h2>
             <p className="sub-index" style={{ marginTop: '6px', fontSize: isMobile ? '0.8rem' : '1.1rem' }}>
               {activeTab === 'summary' && t('informacion_personal')}
@@ -650,6 +680,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               {activeTab === 'tasks' && t('grupos_tareas_sub')}
               {activeTab === 'task-details' && t('subtareas_sub')}
               {activeTab === 'novedades' && t('novedades_sub')}
+              {activeTab === 'bulk-upload' && t('cargue_masivo_sub')}
             </p>
           </div>
         </div>
@@ -665,7 +696,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 gap: '12px',
                 border: '1px solid var(--border-color)'
               }}>
-                <Search size={18} color="rgba(255,255,255,0.2)" />
+                <Search size={18} color="var(--text-secondary)" />
                 <input 
                   placeholder={t('buscar')} 
                   value={searchTerm}
@@ -673,7 +704,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                   style={{ 
                     background: 'transparent', 
                     border: 'none', 
-                    color: 'white', 
+                    color: 'var(--text-primary)', 
                     outline: 'none',
                     fontSize: '0.9rem',
                     minWidth: '250px'
@@ -694,6 +725,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 alignItems: 'center', 
                 gap: '8px', 
                 cursor: 'pointer',
+                color: 'var(--text-primary)',
                 border: '1px solid var(--accent-primary)'
               }}
               title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
@@ -1091,11 +1123,23 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           )}
 
           {activeTab === 'roles' && (
-             <RoleList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+             <RoleList 
+               onEdit={handleEdit} 
+               refreshKey={refreshKey} 
+               searchTerm={searchTerm} 
+               canEdit={hasPermission('roles', 'editar')}
+               canDelete={hasPermission('roles', 'eliminar')}
+             />
           )}
 
           {activeTab === 'shifts' && (
-             <ShiftList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+             <ShiftList 
+               onEdit={handleEdit} 
+               refreshKey={refreshKey} 
+               searchTerm={searchTerm} 
+               canEdit={hasPermission('turnos', 'editar')}
+               canDelete={hasPermission('turnos', 'eliminar')}
+             />
           )}
 
           {activeTab === 'logs' && (
@@ -1103,27 +1147,63 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           )}
 
           {activeTab === 'jobs' && (
-            <JobList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <JobList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('cargos', 'editar')}
+              canDelete={hasPermission('cargos', 'eliminar')}
+            />
           )}
 
           {activeTab === 'groups' && (
-            <GroupList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <GroupList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('grupos', 'editar')}
+              canDelete={hasPermission('grupos', 'eliminar')}
+            />
           )}
 
           {activeTab === 'holidays' && (
-            <HolidayList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <HolidayList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('festivos', 'editar')}
+              canDelete={hasPermission('festivos', 'eliminar')}
+            />
           )}
 
           {activeTab === 'tasks' && (
-            <TaskList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <TaskList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('tareas', 'editar')}
+              canDelete={hasPermission('tareas', 'eliminar')}
+            />
           )}
 
           {activeTab === 'task-details' && (
-            <TaskDetailList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <TaskDetailList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('det_tareas', 'editar')}
+              canDelete={hasPermission('det_tareas', 'eliminar')}
+            />
           )}
 
           {activeTab === 'novedades' && (
-            <NovedadList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <NovedadList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('novedades', 'editar')}
+              canDelete={hasPermission('novedades', 'eliminar')}
+            />
           )}
 
           {activeTab === 'activity-calendar' && (
@@ -1131,7 +1211,25 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           )}
           
           {activeTab === 'users' && (
-            <UserProfileList onEdit={handleEdit} refreshKey={refreshKey} searchTerm={searchTerm} />
+            <UserProfileList 
+              onEdit={handleEdit} 
+              refreshKey={refreshKey} 
+              searchTerm={searchTerm} 
+              canEdit={hasPermission('usuarios', 'editar')}
+              canDelete={hasPermission('usuarios', 'eliminar')}
+            />
+          )}
+
+          {activeTab === 'configuracion' && (
+            <SystemConfigForm />
+          )}
+
+          {activeTab === 'bulk-upload' && (
+            <BulkUpload />
+          )}
+
+          {activeTab === 'apariencia' && (
+            <CustomAppearanceForm />
           )}
         </section>
 
@@ -1159,6 +1257,40 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             </div>
           </div>
         )}
+
+        {currentUser && ['administrador', 'superadmin'].includes((currentUser?.role_name || '').toLowerCase()) && (
+          <>
+            {isAiChatOpen ? (
+              <AIAssistantChat onClose={() => setIsAiChatOpen(false)} currentUser={currentUser} />
+            ) : (
+              <button 
+                onClick={() => setIsAiChatOpen(true)}
+                style={{
+                  position: 'fixed',
+                  bottom: '20px',
+                  right: '20px',
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 5px 20px rgba(0, 240, 255, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 9999,
+                  animation: 'aiPulse 2s infinite'
+                }}
+                title="Soporte de Inteligencia Artificial"
+              >
+                <Bot size={28} color="var(--text-secondary)" />
+              </button>
+            )}
+          </>
+        )}
+
       </main>
 
       <style>{`
@@ -1182,6 +1314,11 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           text-transform: uppercase;
           letter-spacing: 1px;
           opacity: 0.8;
+        }
+        @keyframes aiPulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+          70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(0, 240, 255, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
         }
       `}</style>
     </div>

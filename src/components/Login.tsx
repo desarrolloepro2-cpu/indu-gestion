@@ -9,6 +9,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [appConfig, setAppConfig] = useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchAppAppearance = async () => {
+      const { data } = await supabase.from('configuracion_apariencia').select('*').eq('id', 1).single();
+      if (data) setAppConfig(data);
+    };
+    fetchAppAppearance();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -88,18 +98,18 @@ const Login = () => {
             width: '100%'
           }}>
             <img 
-              src="/logo_indutronica.png" 
+              src={appConfig?.logo_url || "/logo_indutronica.png"} 
               alt="Logo" 
               style={{ 
                 width: '100%', 
+                maxHeight: '100px',
                 objectFit: 'contain',
-                filter: 'drop-shadow(0 0 12px rgba(58, 75, 224, 0.5))'
+                filter: 'drop-shadow(0 0 12px var(--accent-glow))'
               }} 
             />
           </div>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>
-            <span style={{ color: '#3A4BE0' }}>Indu</span>
-            <span style={{ color: '#94A3B8' }}>Conocimiento</span>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, letterSpacing: '-1px', color: 'var(--text-primary)' }}>
+            {appConfig?.nombre_organizacion || 'InduConocimiento'}
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.94rem', marginTop: '10px', fontWeight: 500 }}>
             {t('sistema_gestion')}

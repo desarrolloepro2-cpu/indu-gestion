@@ -6,9 +6,11 @@ interface ShiftListProps {
   onEdit: (shift: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [shifts, setShifts] = useState<any[]>([]);
   const [, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -178,7 +180,7 @@ const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm })
                   </div>
                 </div>
               ) : null}
-              {shift.habilitado && (
+              {canEdit && shift.habilitado && (
                 <button 
                   onClick={() => onEdit(shift)}
                   style={{ 
@@ -196,30 +198,32 @@ const ShiftList: React.FC<ShiftListProps> = ({ onEdit, refreshKey, searchTerm })
                   <Edit2 size={18} />
                 </button>
               )}
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setConfirmingId(confirmingId === shift.id ? null : shift.id);
-                }}
-                style={{ 
-                  background: confirmingId === shift.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.05)', 
-                  border: 'none', 
-                  color: confirmingId === shift.id ? 'white' : (shift.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
-                  cursor: 'pointer',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  filter: shift.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                title={shift.habilitado ? "Desactivar" : "Activar"}
-              >
-                <Power size={18} />
-              </button>
+              {canDelete && (
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setConfirmingId(confirmingId === shift.id ? null : shift.id);
+                  }}
+                  style={{ 
+                    background: confirmingId === shift.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.05)', 
+                    border: 'none', 
+                    color: confirmingId === shift.id ? 'white' : (shift.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
+                    cursor: 'pointer',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    filter: shift.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                  title={shift.habilitado ? "Desactivar" : "Activar"}
+                >
+                  <Power size={18} />
+                </button>
+              )}
             </div>
           </div>
 

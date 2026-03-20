@@ -6,9 +6,11 @@ interface HolidayListProps {
   onEdit: (holiday: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const HolidayList: React.FC<HolidayListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const HolidayList: React.FC<HolidayListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -121,7 +123,7 @@ const HolidayList: React.FC<HolidayListProps> = ({ onEdit, refreshKey, searchTer
                     </div>
                   </div>
                 ) : null}
-                {item.habilitado && (
+                {canEdit && item.habilitado && (
                   <button 
                     onClick={() => onEdit(item)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
@@ -130,29 +132,31 @@ const HolidayList: React.FC<HolidayListProps> = ({ onEdit, refreshKey, searchTer
                     <span style={{ fontSize: '0.8rem' }}>Editar</span>
                   </button>
                 )}
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setConfirmingId(confirmingId === item.id ? null : item.id);
-                  }}
-                  style={{ 
-                    background: confirmingId === item.id ? 'var(--accent-primary)' : 'transparent', 
-                    border: 'none', 
-                    color: confirmingId === item.id ? 'white' : (item.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    padding: confirmingId === item.id ? '4px' : '0px',
-                    borderRadius: '6px',
-                    filter: item.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
-                    transition: 'all 0.3s ease'
-                  }}
-                  title={item.habilitado ? "Desactivar" : "Activar"}
-                >
-                  <Power size={18} />
-                </button>
+                {canDelete && (
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmingId(confirmingId === item.id ? null : item.id);
+                    }}
+                    style={{ 
+                      background: confirmingId === item.id ? 'var(--accent-primary)' : 'transparent', 
+                      border: 'none', 
+                      color: confirmingId === item.id ? 'white' : (item.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      padding: confirmingId === item.id ? '4px' : '0px',
+                      borderRadius: '6px',
+                      filter: item.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
+                      transition: 'all 0.3s ease'
+                    }}
+                    title={item.habilitado ? "Desactivar" : "Activar"}
+                  >
+                    <Power size={18} />
+                  </button>
+                )}
               </div>
             </div>
 

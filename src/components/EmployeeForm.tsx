@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, secondarySupabase } from '../supabaseClient';
 import { X, AlertCircle, Camera, Upload, Check } from 'lucide-react';
+import SearchableSelect from './SearchableSelect';
 
 interface EmployeeFormProps {
   onClose: () => void;
@@ -61,7 +62,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
         primer_apellido: initialData.primer_apellido || '',
         segundo_apellido: initialData.segundo_apellido || '',
         apodo: initialData.apodo || '',
-        id_tipo_documento: initialData.id_tipo_documento || '',
+        id_tipo_documento: initialData.id_tipo_documento?.toString() || '',
         numero_documento: initialData.numero_documento || '',
         correo_electronico: initialData.correo_electronico || '',
         direccion: initialData.direccion || '',
@@ -97,7 +98,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
       setCountries(p.data);
       if (!initialData) {
         const co = p.data.find((c: any) => c.codigo_iso === 'CO');
-        if (co) setFormData(prev => ({ ...prev, id_pais: co.id }));
+        if (co) setFormData(prev => ({ ...prev, id_pais: co.id.toString() }));
       }
     }
     if (r.data) {
@@ -164,11 +165,20 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
 
       let currentFotoUrl = formData.foto_url;
 
-      // 3. Preparar payload básico (sin la foto final aún si es nuevo)
-      const payload = {
-        ...formData,
-        telefono: `${countryCode}${phoneDigits}`
-      };
+      // 3. Preparar payload limpio para Supabase
+      const payload: any = { ...formData };
+      
+      // Asegurarse de que los campos bigint/int sean números o null (no strings vacíos)
+      const numericFields = ['id_tipo_documento', 'id_cargo', 'id_grupo_trabajo', 'id_centro_costos', 'id_pais'];
+      numericFields.forEach(field => {
+        if (payload[field] === '' || payload[field] === null || payload[field] === undefined) {
+          payload[field] = null;
+        } else {
+          payload[field] = Number(payload[field]);
+        }
+      });
+
+      payload.telefono = `${countryCode}${phoneDigits}`;
 
       if (initialData?.id) {
         // Si estamos editando y hay nueva imagen, subirla
@@ -180,8 +190,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
         const { error: updateError } = await supabase.from('empleados').update(payload).eq('id', initialData.id);
         if (updateError) throw updateError;
       } else {
-        // Si es nuevo, insertar primero para obtener ID si es necesario para el nombre del archivo, 
-        // o simplemente subir con un UUID.
+        // Si es nuevo
         const tempId = crypto.randomUUID();
         if (imageFile) {
           currentFotoUrl = await uploadImage(tempId);
@@ -222,7 +231,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
       setLoading(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
     setFormData(prev => ({
@@ -231,15 +239,28 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
     }));
   };
 
+  const handleManualChange = (name: string, value: any) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   return (
     <div style={{ position: 'relative' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>{initialData ? 'Editar Perfil' : 'Alta de Personal'}</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Gestión centralizada del capital humano</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+            {initialData ? 'Editar Perfil' : 'Alta de Personal'}
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+            Gestión centralizada del capital humano
+          </p>
         </div>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-          <X size={24} />
+        <button 
+          onClick={onClose} 
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '12px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+        >
+          <X size={20} />
         </button>
       </header>
 
@@ -336,27 +357,33 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-          <div className="input-group">
-            <label className="input-label">Cargo Laboral *</label>
-            <select name="id_cargo" className="neon-input" value={formData.id_cargo} onChange={handleChange} required>
-              <option value="">Seleccione...</option>
-              {jobs.map(j => <option key={j.id} value={j.id}>{j.nombre_cargo}</option>)}
-            </select>
-          </div>
-          <div className="input-group">
-            <label className="input-label">Grupo de Trabajo *</label>
-            <select name="id_grupo_trabajo" className="neon-input" value={formData.id_grupo_trabajo} onChange={handleChange} required>
-              <option value="">Seleccione...</option>
-              {groups.map(g => <option key={g.id} value={g.id}>{g.nombre_grupo}</option>)}
-            </select>
-          </div>
-          <div className="input-group">
-            <label className="input-label">Centro de Costos *</label>
-            <select name="id_centro_costos" className="neon-input" value={formData.id_centro_costos} onChange={handleChange} required>
-              <option value="">Seleccione...</option>
-              {costCenters.map(cc => <option key={cc.id} value={cc.id}>{cc.codigo} - {cc.nombre_centro}</option>)}
-            </select>
-          </div>
+          <SearchableSelect 
+            label="Cargo Laboral" 
+            options={jobs.map(j => ({ id: j.id, label: j.nombre_cargo }))} 
+            value={formData.id_cargo} 
+            onChange={(val) => handleManualChange('id_cargo', val)}
+            placeholder="Seleccione cargo..."
+            required
+            showAvatar={false}
+          />
+          <SearchableSelect 
+            label="Grupo de Trabajo" 
+            options={groups.map(g => ({ id: g.id, label: g.nombre_grupo }))} 
+            value={formData.id_grupo_trabajo} 
+            onChange={(val) => handleManualChange('id_grupo_trabajo', val)}
+            placeholder="Seleccione grupo..."
+            required
+            showAvatar={false}
+          />
+          <SearchableSelect 
+            label="Centro de Costos" 
+            options={costCenters.map(cc => ({ id: cc.id, label: `${cc.codigo} - ${cc.nombre_centro}` }))} 
+            value={formData.id_centro_costos} 
+            onChange={(val) => handleManualChange('id_centro_costos', val)}
+            placeholder="Seleccione centro..."
+            required
+            showAvatar={false}
+          />
         </div>
 
         <div className="input-group" style={{ marginBottom: '30px' }}>
@@ -411,9 +438,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ onClose, onRefresh, initial
           <label htmlFor="active-check" className="input-label" style={{ marginBottom: 0 }}>Estado del empleado: ACTIVO</label>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <button type="submit" className="neon-btn" style={{ flex: 1, height: '50px', fontSize: '1rem', fontWeight: 800 }} disabled={loading}>
-            {loading ? 'Sincronizando...' : initialData ? 'Guardar Cambios' : 'Confirmar y Guardar'}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
+          <button type="submit" className="neon-btn" style={{ flex: 2, height: '54px', fontSize: '1rem', fontWeight: 800 }} disabled={loading}>
+            {loading ? 'Procesando...' : initialData ? 'Guardar Cambios' : 'Confirmar y Guardar'}
           </button>
           <button type="button" onClick={onClose} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '12px', fontWeight: 700 }}>
             Descartar

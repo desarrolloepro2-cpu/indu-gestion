@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, ImageIcon } from 'lucide-react';
+import { IconPicker } from './DynamicIcon';
 
 interface GroupFormProps {
   onClose: () => void;
@@ -15,7 +16,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ onClose, onRefresh, initialData }
   const [formData, setFormData] = useState({
     nombre_grupo: '',
     descripcion: '',
-    habilitado: true
+    habilitado: true,
+    icono_nombre: 'Layers'
   });
 
   useEffect(() => {
@@ -23,7 +25,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ onClose, onRefresh, initialData }
       setFormData({
         nombre_grupo: initialData.nombre_grupo || '',
         descripcion: initialData.descripcion || '',
-        habilitado: initialData.habilitado !== undefined ? initialData.habilitado : true
+        habilitado: initialData.habilitado !== undefined ? initialData.habilitado : true,
+        icono_nombre: initialData.icono_nombre || 'Layers'
       });
     }
   }, [initialData]);
@@ -58,18 +61,30 @@ const GroupForm: React.FC<GroupFormProps> = ({ onClose, onRefresh, initialData }
   };
 
   return (
-    <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{initialData ? 'Editar' : 'Nuevo'} Grupo de Trabajo</h2>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-          <X size={24} />
+    <div style={{ position: 'relative' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+            {initialData ? 'Editar' : 'Nuevo'} Grupo de Trabajo
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+            Organización de equipos y unidades funcionales
+          </p>
+        </div>
+        <button 
+          onClick={onClose} 
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '12px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+        >
+          <X size={20} />
         </button>
       </header>
 
       {error && (
-        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', padding: '12px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <AlertCircle size={18} />
-          <span>{error}</span>
+        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+          <AlertCircle size={20} />
+          <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{error}</span>
         </div>
       )}
 
@@ -91,6 +106,16 @@ const GroupForm: React.FC<GroupFormProps> = ({ onClose, onRefresh, initialData }
           />
         </div>
 
+        <div className="input-group">
+          <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ImageIcon size={16} /> Seleccionar Icono Representativo
+          </label>
+          <IconPicker 
+            selectedIcon={formData.icono_nombre} 
+            onSelect={(name) => setFormData(prev => ({ ...prev, icono_nombre: name }))} 
+          />
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '30px' }}>
           <input 
             type="checkbox" 
@@ -103,11 +128,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ onClose, onRefresh, initialData }
           <label htmlFor="group-habilitado" className="input-label" style={{ marginBottom: 0 }}>Habilitado</label>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button type="submit" className="neon-btn" style={{ flex: 1 }} disabled={loading}>
-            {loading ? 'Guardando...' : initialData ? 'Actualizar Grupo' : 'Registrar Grupo'}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
+          <button type="submit" className="neon-btn" style={{ flex: 2, height: '54px', fontSize: '1rem', fontWeight: 800 }} disabled={loading}>
+            {loading ? 'Procesando...' : initialData ? 'Actualizar Grupo' : 'Registrar Grupo'}
           </button>
-          <button type="button" onClick={onClose} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '8px', fontWeight: 600 }}>
+          <button type="button" onClick={onClose} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '12px', fontWeight: 700 }}>
             Cancelar
           </button>
         </div>

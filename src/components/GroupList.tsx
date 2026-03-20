@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Layers, Edit2, CheckCircle, XCircle, Power } from 'lucide-react';
+import { Edit2, CheckCircle, XCircle, Power } from 'lucide-react';
+import { DynamicIcon } from './DynamicIcon';
 
 interface GroupListProps {
   onEdit: (group: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const GroupList: React.FC<GroupListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const GroupList: React.FC<GroupListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true, canDelete = true }) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -69,7 +72,7 @@ const GroupList: React.FC<GroupListProps> = ({ onEdit, refreshKey, searchTerm })
                   borderRadius: '10px',
                   color: 'var(--accent-secondary)'
                 }}>
-                  <Layers size={22} />
+                  <DynamicIcon name={item.icono_nombre || 'Layers'} size={22} />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: item.habilitado ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{item.nombre_grupo}</h3>
@@ -106,7 +109,7 @@ const GroupList: React.FC<GroupListProps> = ({ onEdit, refreshKey, searchTerm })
                     </div>
                   </div>
                 ) : null}
-                {item.habilitado && (
+                {canEdit && item.habilitado && (
                   <button 
                     onClick={() => onEdit(item)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
@@ -115,29 +118,31 @@ const GroupList: React.FC<GroupListProps> = ({ onEdit, refreshKey, searchTerm })
                     <span style={{ fontSize: '0.8rem' }}>Editar</span>
                   </button>
                 )}
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setConfirmingId(confirmingId === item.id ? null : item.id);
-                  }}
-                  style={{ 
-                    background: confirmingId === item.id ? 'var(--accent-primary)' : 'transparent', 
-                    border: 'none', 
-                    color: confirmingId === item.id ? 'white' : (item.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    padding: confirmingId === item.id ? '4px' : '0px',
-                    borderRadius: '6px',
-                    filter: item.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
-                    transition: 'all 0.3s ease'
-                  }}
-                  title={item.habilitado ? "Desactivar" : "Activar"}
-                >
-                  <Power size={18} />
-                </button>
+                {canDelete && (
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmingId(confirmingId === item.id ? null : item.id);
+                    }}
+                    style={{ 
+                      background: confirmingId === item.id ? 'var(--accent-primary)' : 'transparent', 
+                      border: 'none', 
+                      color: confirmingId === item.id ? 'white' : (item.habilitado ? '#00d4ff' : 'var(--text-secondary)'), 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      padding: confirmingId === item.id ? '4px' : '0px',
+                      borderRadius: '6px',
+                      filter: item.habilitado ? 'drop-shadow(0 0 5px rgba(0, 212, 255, 0.5))' : 'none',
+                      transition: 'all 0.3s ease'
+                    }}
+                    title={item.habilitado ? "Desactivar" : "Activar"}
+                  >
+                    <Power size={18} />
+                  </button>
+                )}
               </div>
             </div>
 

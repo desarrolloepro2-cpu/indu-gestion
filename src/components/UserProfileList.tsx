@@ -6,9 +6,11 @@ interface UserProfileListProps {
   onEdit: (profile: any) => void;
   refreshKey: number;
   searchTerm: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const UserProfileList: React.FC<UserProfileListProps> = ({ onEdit, refreshKey, searchTerm }) => {
+const UserProfileList: React.FC<UserProfileListProps> = ({ onEdit, refreshKey, searchTerm, canEdit = true }) => {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,12 +92,14 @@ const UserProfileList: React.FC<UserProfileListProps> = ({ onEdit, refreshKey, s
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    onClick={() => onEdit(item)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-                  >
-                    <Edit2 size={16} />
-                  </button>
+                  {canEdit && (
+                    <button 
+                      onClick={() => onEdit(item)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
 

@@ -52,10 +52,7 @@ const ActivityCalendarView: React.FC<ActivityCalendarViewProps> = ({ currentUser
           )
         `);
 
-      if (!isAdmin) {
-        query = query.eq('ejecutor_id', currentUser.id);
-      }
-
+      // RLS ya restringe qué puede ver cada quién (empleados solo ven lo suyo).
       const { data: logsData, error: logsError } = await query;
       
       if (logsError) throw logsError;

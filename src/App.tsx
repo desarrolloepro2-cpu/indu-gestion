@@ -19,6 +19,7 @@ function MainApp() {
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
 
   useEffect(() => {
+    fetchAppAppearance();
     checkSessionAndProfile();
 
     const {
@@ -76,6 +77,43 @@ function MainApp() {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAppAppearance = async () => {
+    const { data } = await supabase.from('configuracion_apariencia').select('*').eq('id', 1).single();
+    if (data) {
+      if (data.nombre_organizacion) document.title = `${data.nombre_organizacion} | InduConocimiento`;
+
+      // Inject dynamic CSS to support both Light and Dark definitions seamlessly without overriding inline styles that break themes
+      let styleEl = document.getElementById('dynamic-appearance');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-appearance';
+        document.head.appendChild(styleEl);
+      }
+
+      styleEl.innerHTML = `
+        :root {
+          --bg-color: ${data.color_fondo || '#05070a'};
+          --accent-primary: ${data.color_primario || '#00d4ff'};
+          --accent-secondary: ${data.color_secundario || '#3b82f6'};
+          --shadow-neon: 0 0 25px ${data.color_primario || '#00d4ff'}4d;
+        }
+        :root[data-theme='light'] {
+          --bg-color: ${data.color_fondo_claro || '#ffffff'};
+          --accent-primary: ${data.color_primario_claro || '#2563eb'};
+          --accent-secondary: ${data.color_secundario_claro || '#1d4ed8'};
+          --shadow-neon: 0 10px 30px ${data.color_primario_claro || '#2563eb'}26;
+        }
+      `;
+      
+      // Cleanup any previously set inline styles that might conflict
+      const root = document.documentElement;
+      root.style.removeProperty('--accent-primary');
+      root.style.removeProperty('--accent-secondary');
+      root.style.removeProperty('--bg-color');
+      root.style.removeProperty('--shadow-neon');
     }
   };
 

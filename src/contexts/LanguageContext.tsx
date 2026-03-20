@@ -38,13 +38,21 @@ const translations: Record<Language, Record<string, string>> = {
     'calendario_trabajo_sub': 'Actividades Registradas',
     'novedades': 'Novedades',
     'novedades_sub': 'Admin. Novedades',
-    'configuracion': 'Configuración del Sistema',
+    'configuracion': 'Configuración Sistema de Correos',
+    'configuracion_sistema': 'Configuración Sistema de Correos',
+    'configuracion_correo': 'Correo y Alertas',
+    'configuracion_correo_sub': 'Notificaciones',
+    'config_email': 'Correo y Notificaciones',
     'roles_permisos': 'Roles de Sistema',
     'roles_permisos_sub': 'Roles',
     'usuarios_perfiles': 'Usuarios del Sistema',
     'usuarios_perfiles_sub': 'Usuarios APP',
     'auditoria_logs': 'Log de Ingreso',
     'auditoria_logs_sub': 'Ingresos Usuarios',
+    'cargue_masivo': 'Cargue Masivo de Datos',
+    'cargue_masivo_sub': 'Cargar desde .CSV',
+    'personalizacion': 'Apariencia y Logo',
+    'personalizacion_sub': 'Personalizar Interfaz',
     'cerrar_sesion': 'Cerrar Sesión',
     'buscar': 'Buscar en el sistema...',
     'registrar_nuevo': 'REGISTRAR NUEVO',
@@ -101,7 +109,11 @@ const translations: Record<Language, Record<string, string>> = {
     'salir': 'Salir',
     'usuario': 'Usuario',
     'sesion_activa': 'Sesión Activa',
-    'conectando': 'Conectando...'
+    'conectando': 'Conectando...',
+    'notificar_responsable': 'Notificar al Responsable de Ejecución',
+    'notificar_supervisor': 'Notificar al Supervisor Directo',
+    'msg_notif_auto': 'Notificaciones Automáticas de Actividad',
+    'desc_notif_auto': 'Define quién debe recibir un correo electrónico informativo en el momento exacto en que se asienta un nuevo reporte de actividad diaria.'
   },
   en: {
     // Dashboard / Sidebar
@@ -132,7 +144,11 @@ const translations: Record<Language, Record<string, string>> = {
     'calendario_trabajo_sub': 'Registered Activities',
     'novedades': 'Issues',
     'novedades_sub': 'Issues Admin',
-    'configuracion': 'System Settings',
+    'configuracion': 'Email System Settings',
+    'configuracion_sistema': 'Email System Configuration',
+    'configuracion_correo': 'Email & Alerts',
+    'configuracion_correo_sub': 'Notifications',
+    'config_email': 'Email & Notifications',
     'roles_permisos': 'System Roles',
     'roles_permisos_sub': 'Roles',
     'usuarios_perfiles': 'System Users',
@@ -202,6 +218,10 @@ const translations: Record<Language, Record<string, string>> = {
     'gestion_novedades': 'Issue Management',
     'trabajo_diario': 'Daily Work',
     'sistemas_auditoria': 'Systems & Audit',
+    'cargue_masivo': 'Bulk Data Upload',
+    'cargue_masivo_sub': 'Upload from .CSV',
+    'personalizacion': 'Appearance & Logo',
+    'personalizacion_sub': 'Customize UI',
     'operaciones_centrales': 'Central Operations',
 
     // Common
@@ -232,7 +252,11 @@ const translations: Record<Language, Record<string, string>> = {
     'configuracion_cuenta': 'Account Settings',
     'contraseñas': 'Passwords',
     'salir': 'Logout',
-    'usuario': 'User'
+    'usuario': 'User',
+    'notificar_responsable': 'Notify Execution Responsible',
+    'notificar_supervisor': 'Notify Direct Supervisor',
+    'msg_notif_auto': 'Automatic Activity Notifications',
+    'desc_notif_auto': 'Define who should receive an informational email at the exact moment a new daily activity report is submitted.'
   }
 };
 
