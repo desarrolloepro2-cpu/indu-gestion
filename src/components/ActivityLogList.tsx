@@ -127,7 +127,11 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                     </span>
                     {log.programacion && typeof log.programacion.porcentaje_ejecucion !== 'undefined' && (
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '4px' }}>
-                        AVANCE DE OBRA: <strong style={{ color: log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' }}>{log.programacion.porcentaje_ejecucion}%</strong>
+                        AVANCE DE OBRA: <strong style={{ 
+                          color: log.programacion.porcentaje_ejecucion > 120 ? 'var(--error)' : 
+                                 log.programacion.porcentaje_ejecucion > 100 ? '#f97316' : 
+                                 log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' 
+                        }}>{log.programacion.porcentaje_ejecucion}%</strong>
                       </span>
                     )}
                   </div>
@@ -294,7 +298,11 @@ const ActivityLogList: React.FC<ActivityLogListProps> = ({ onEdit, refreshKey, s
                     </span>
                     {log.programacion && typeof log.programacion.porcentaje_ejecucion !== 'undefined' && (
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, marginTop: '2px', backgroundColor: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                        AVANCE DE OBRA: <strong style={{ color: log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' }}>{log.programacion.porcentaje_ejecucion}%</strong>
+                        AVANCE DE OBRA: <strong style={{ 
+                          color: log.programacion.porcentaje_ejecucion > 120 ? 'var(--error)' : 
+                                 log.programacion.porcentaje_ejecucion > 100 ? '#f97316' : 
+                                 log.programacion.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' 
+                        }}>{log.programacion.porcentaje_ejecucion}%</strong>
                       </span>
                     )}
                   </div>

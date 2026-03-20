@@ -113,7 +113,9 @@ const translations: Record<Language, Record<string, string>> = {
     'notificar_responsable': 'Notificar al Responsable de Ejecución',
     'notificar_supervisor': 'Notificar al Supervisor Directo',
     'msg_notif_auto': 'Notificaciones Automáticas de Actividad',
-    'desc_notif_auto': 'Define quién debe recibir un correo electrónico informativo en el momento exacto en que se asienta un nuevo reporte de actividad diaria.'
+    'desc_notif_auto': 'Define quién debe recibir un correo electrónico informativo en el momento exacto en que se asienta un nuevo reporte de actividad diaria.',
+    'reporte_horas': 'Reporte de Horas Registradas',
+    'reporte_horas_sub': 'Cálculo de nómina y extras'
   },
   en: {
     // Dashboard / Sidebar
@@ -256,7 +258,9 @@ const translations: Record<Language, Record<string, string>> = {
     'notificar_responsable': 'Notify Execution Responsible',
     'notificar_supervisor': 'Notify Direct Supervisor',
     'msg_notif_auto': 'Automatic Activity Notifications',
-    'desc_notif_auto': 'Define who should receive an informational email at the exact moment a new daily activity report is submitted.'
+    'desc_notif_auto': 'Define who should receive an informational email at the exact moment a new daily activity report is submitted.',
+    'reporte_horas': 'Registered Hours Report',
+    'reporte_horas_sub': 'Payroll & Overtime Calculation'
   }
 };
 

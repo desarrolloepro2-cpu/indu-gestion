@@ -65,6 +65,8 @@ import SystemConfigForm from './SystemConfigForm';
 import AIAssistantChat from './AIAssistantChat';
 import BulkUpload from './BulkUpload';
 import CustomAppearanceForm from './CustomAppearanceForm';
+import HoursReportView from './HoursReportView';
+
 
 interface DashboardProps {
   session: any;
@@ -74,7 +76,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { language, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar' | 'configuracion' | 'bulk-upload' | 'apariencia'>(() => {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia'];
+    const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia', 'hours-report'];
     if (hash && validTabs.includes(hash)) return hash as any;
     return (localStorage.getItem('dashboardTab') as any) || 'summary';
   });
@@ -83,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts' , 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia'];
+      const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts' , 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia', 'hours-report'];
       if (hash && validTabs.includes(hash)) {
         setActiveTab(hash as any);
       }
@@ -145,7 +147,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
       'activity-calendar': t('calendario_trabajo'),
       configuracion: t('configuracion_sistema'),
       'bulk-upload': t('cargue_masivo'),
-      apariencia: t('personalizacion')
+      apariencia: t('personalizacion'),
+      'hours-report': t('reporte_horas')
     };
     document.title = `${tabTitles[activeTab] || 'Dashboard'} | InduConocimiento`;
   }, [activeTab, t]);
@@ -538,7 +541,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           {hasPermission('usuarios') && <SidebarItem id="users" icon={User} label={t('usuarios_perfiles')} subKey="usuarios_perfiles_sub" />}
           {hasPermission('roles') && <SidebarItem id="roles" icon={Shield} label={t('roles_permisos')} subKey="roles_permisos_sub" />}
           {hasPermission('logs') && <SidebarItem id="logs" icon={History} label={t('auditoria_logs')} subKey="auditoria_logs_sub" />}
-          {hasPermission('reportes') && <SidebarItem id="summary" icon={FileText} label={t('reportes_maestros')} />}
+          {hasPermission('reportes') && <SidebarItem id="hours-report" icon={FileText} label={t('reporte_horas')} subKey="reporte_horas_sub" />}
           {hasPermission('cargue_masivo') && <SidebarItem id="bulk-upload" icon={Upload} label={t('cargue_masivo')} subKey="cargue_masivo_sub" />}
           {hasPermission('configuracion') && <SidebarItem id="apariencia" icon={Palette} label={t('personalizacion')} subKey="apariencia_sub" />}
 
@@ -1230,6 +1233,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
 
           {activeTab === 'apariencia' && (
             <CustomAppearanceForm />
+          )}
+
+          {activeTab === 'hours-report' && (
+            <HoursReportView currentUser={currentUser} />
           )}
         </section>
 

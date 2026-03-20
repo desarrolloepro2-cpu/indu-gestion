@@ -212,17 +212,30 @@ const ProgramacionList: React.FC<ProgramacionListProps> = ({ onEdit, refreshKey,
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>AVANCE DE OBRA</span>
                   {item.porcentaje_ejecucion === 100 && <span className="mini-badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>Completado</span>}
+                  {item.porcentaje_ejecucion > 100 && (
+                    <span className="mini-badge" style={{ 
+                      backgroundColor: item.porcentaje_ejecucion > 120 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(249, 115, 22, 0.1)', 
+                      color: item.porcentaje_ejecucion > 120 ? 'var(--error)' : '#f97316', 
+                      borderColor: item.porcentaje_ejecucion > 120 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(249, 115, 22, 0.2)' 
+                    }}>
+                      {item.porcentaje_ejecucion > 120 ? 'SOBREPASADO' : 'EXCEDIDO'}
+                    </span>
+                  )}
                 </div>
-                <span style={{ fontSize: '1rem', fontWeight: 900, color: item.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' }}>
+                <span style={{ 
+                  fontSize: '1rem', 
+                  fontWeight: 900, 
+                  color: item.porcentaje_ejecucion > 120 ? 'var(--error)' : item.porcentaje_ejecucion > 100 ? '#f97316' : item.porcentaje_ejecucion === 100 ? 'var(--success)' : 'var(--accent-primary)' 
+                }}>
                    {item.porcentaje_ejecucion}%
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
                 <div style={{ 
-                  width: `${item.porcentaje_ejecucion}%`, 
+                  width: `${Math.min(item.porcentaje_ejecucion, 100)}%`, 
                   height: '100%', 
-                  background: item.porcentaje_ejecucion === 100 ? 'var(--success)' : 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
-                  boxShadow: item.porcentaje_ejecucion > 0 ? `0 0 10px ${item.porcentaje_ejecucion === 100 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(0, 212, 255, 0.4)'}` : 'none',
+                  background: item.porcentaje_ejecucion > 120 ? 'var(--error)' : item.porcentaje_ejecucion > 100 ? '#f97316' : item.porcentaje_ejecucion === 100 ? 'var(--success)' : 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
+                  boxShadow: item.porcentaje_ejecucion > 0 ? `0 0 10px ${item.porcentaje_ejecucion > 120 ? 'rgba(244, 63, 94, 0.4)' : item.porcentaje_ejecucion > 100 ? 'rgba(249, 115, 22, 0.4)' : item.porcentaje_ejecucion === 100 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(0, 212, 255, 0.4)'}` : 'none',
                   transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)'
                 }} />
               </div>

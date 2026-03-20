@@ -330,53 +330,62 @@ const ActivityLogForm: React.FC<ActivityLogFormProps> = ({ log, onSave, onCancel
       observacion: formData.observacion
     };
 
-    // Lógica de auto-aprobación si cumple el horario del turno
+    // Lógica de auto-aprobación si cumple el horario del turno (Turno del Registro)
     let autoAprobado = false;
     if (formData.turno_id && formData.fecha_inicio && formData.fecha_fin) {
       const turnoSelected = options.turnos.find(t => t.id === formData.turno_id);
-      if (turnoSelected && turnoSelected.lunes !== undefined) {
+      if (turnoSelected && (turnoSelected.lunes !== undefined || turnoSelected.id)) {
         const startD = new Date(formData.fecha_inicio);
         const endD = new Date(formData.fecha_fin);
         
-        if (startD.toDateString() === endD.toDateString()) {
-          const dayIndex = startD.getDay();
-          const dayKeys = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
-          const dbDays = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const dayIndex = startD.getDay();
+        const dayKeys = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
+        const dbDays = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        
+        const key = dayKeys[dayIndex];
+        const dbDay = dbDays[dayIndex];
+        
+        // Verifica si el turno está habilitado para ese día de la semana
+        if (turnoSelected[dbDay]) {
+          const tStartStr = turnoSelected[`h_inicio_${key}`];
+          const dur = turnoSelected[`duracion_${key}`];
+          const alm = turnoSelected[`almuerzo_${key}`];
           
-          const key = dayKeys[dayIndex];
-          const dbDay = dbDays[dayIndex];
-          
-          if (turnoSelected[dbDay]) {
-            const tStartStr = turnoSelected[`h_inicio_${key}`];
-            const dur = turnoSelected[`duracion_${key}`];
-            const alm = turnoSelected[`almuerzo_${key}`];
+          if (tStartStr && typeof dur === 'number') {
+            const [h, m] = tStartStr.split(':').map(Number);
+            const maxH = h + dur + (alm ? 1 : 0);
             
-            if (tStartStr && typeof dur === 'number') {
-              const [h, m] = tStartStr.split(':').map(Number);
-              const maxH = h + dur + (alm ? 1 : 0);
-              
-              const actStartMin = startD.getHours() * 60 + startD.getMinutes();
-              const actEndMin = endD.getHours() * 60 + endD.getMinutes();
-              
-              const tStartMin = h * 60 + m;
-              const tEndMin = maxH * 60 + m;
-              
-              // Pequeño margen de tolerancia de 5 minutos o estricto
-              if (actStartMin >= (tStartMin - 5) && actEndMin <= (tEndMin + 15)) {
-                autoAprobado = true;
-              }
+            // Calculo de tiempo de actividad en base al inicio del día de arranque
+            const actStartMin = startD.getHours() * 60 + startD.getMinutes();
+            // Diferencia real de tiempo de inicio a fin + inicio (para solventar saltos de día)
+            const diffMin = (endD.getTime() - startD.getTime()) / 60000;
+            const actEndMin = actStartMin + diffMin;
+            
+            // Calculo de horas teóricas del turno con respecto al inicio del día de arranque
+            const tStartMin = h * 60 + m;
+            const tEndMin = maxH * 60 + m;
+            
+            // Pequeño margen de tolerancia de 15 minutos al inicio, y 30 minutos de retraso de cierre
+            // Se aprueba si el inicio es cercano al oficial Y el fin no excede mucho el tiempo permitido
+            if (actStartMin >= (tStartMin - 15) && actStartMin <= (tStartMin + 60) && actEndMin <= (tEndMin + 30)) {
+              autoAprobado = true;
             }
           }
         }
       }
     }
 
-    if (canApprove) {
+    // Prioridad: Si es auto-aprobado por horario, se marca como tal. 
+    // Si no, y el usuario tiene permisos (canApprove), se usa lo que el usuario marcó.
+    if (autoAprobado) {
+      payload.aprobado = true;
+      // Si ya estaba aprobado por alguien, mantenemos el ID, si no dejamos el de sistema o nulo
+      payload.aprobado_por = log?.aprobado_por || null;
+    } else if (canApprove) {
       payload.aprobado = formData.aprobado;
       payload.aprobado_por = formData.aprobado ? (currentUser.perfil_id || currentUser.id) : null;
     } else {
-      payload.aprobado = autoAprobado;
-      // Mantiene el aprobado_por original si ya estaba, o nulo si es automático
+      payload.aprobado = false;
       payload.aprobado_por = log?.aprobado_por || null;
     }
 
