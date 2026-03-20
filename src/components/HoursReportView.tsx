@@ -3,8 +3,7 @@ import { supabase } from '../supabaseClient';
 import { 
   Download, 
   Search, 
-  Calendar,
-  Filter
+  Calendar
 } from 'lucide-react';
 import { 
   format, 

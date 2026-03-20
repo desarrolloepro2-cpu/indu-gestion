@@ -25,7 +25,7 @@ import {
   Palmtree,
   Globe,
   Menu,
-  X,
+  X, 
   Settings,
   Bot,
   Upload,
@@ -74,7 +74,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { language, setLanguage, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar' | 'configuracion' | 'bulk-upload' | 'apariencia'>(() => {
+  const [activeTab, setActiveTab] = useState<'summary' | 'employees' | 'costs' | 'schedule' | 'roles' | 'shifts' | 'logs' | 'jobs' | 'groups' | 'holidays' | 'tasks' | 'task-details' | 'novedades' | 'users' | 'activity-log' | 'activity-calendar' | 'configuracion' | 'bulk-upload' | 'apariencia' | 'hours-report'>(() => {
     const hash = window.location.hash.replace('#', '');
     const validTabs = ['summary', 'employees', 'costs', 'schedule', 'roles', 'shifts', 'logs', 'jobs', 'groups', 'holidays', 'tasks', 'task-details', 'novedades', 'users', 'activity-log', 'activity-calendar', 'configuracion', 'bulk-upload', 'apariencia', 'hours-report'];
     if (hash && validTabs.includes(hash)) return hash as any;
